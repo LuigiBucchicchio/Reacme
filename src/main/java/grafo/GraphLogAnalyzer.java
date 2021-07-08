@@ -1,0 +1,295 @@
+package grafo;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.stream.file.FileSinkImages;
+import org.graphstream.stream.file.FileSinkImages.LayoutPolicy;
+import org.graphstream.stream.file.FileSinkImages.OutputType;
+import org.graphstream.stream.file.images.Resolutions;
+
+public class GraphLogAnalyzer {	
+	private static int graphNumber = 0;
+	private List<Trace> traceSet = new ArrayList<Trace> ();
+	private Graph graph;
+	boolean firstTime= true;
+	private Set<String> nodeIdSuperSet = new TreeSet<String>();
+	private Set<String> edgeIdSuperSet = new TreeSet<String>();
+
+	private Set<String> nodeIdSet;
+	private Set<String> edgeIdSet;
+
+	private String lastNodeId = null;
+	private long startingTime;
+	private long finishTime;
+	private char delimiter='t';
+	
+	public GraphLogAnalyzer() {
+		graphNumber++;
+		graph = new MultiGraph("RepeatingGraph"+graphNumber);
+	}
+
+	public List<Trace> getTraceSet() {
+		return traceSet;
+	}
+	public void setTraceSet(List<Trace> traceSet) {
+		this.traceSet = traceSet;
+	}
+	public String getLastNodeId() {
+		return lastNodeId;
+	}
+	public void setLastNodeId(String lastNodeId) {
+		this.lastNodeId = lastNodeId;
+	}
+	public void setGraph(Graph graph) {
+		this.graph = graph;
+	}
+	public long getStartingTime() {
+		return startingTime;
+	}
+	public void setStartingTime(long startingTime) {
+		this.startingTime = startingTime;
+	}
+	public long getFinishTime() {
+		return finishTime;
+	}
+	public void setFinishTime(long finishTime) {
+		this.finishTime = finishTime;
+	}
+	public char getDelimiter() {
+		return delimiter;
+	}
+	public void setDelimiter(char delimiter) {
+		this.delimiter = delimiter;
+	}
+	public Graph getGraph() {
+		return graph;
+	}
+
+
+	public void LogAnalyze() {
+		firstTime= true;
+
+		this.startingTime=System.currentTimeMillis();
+		Iterator<Trace> traceSetIterator = traceSet.iterator();
+
+		while(traceSetIterator.hasNext()) {
+
+			nodeIdSet = new TreeSet<String> ();
+			edgeIdSet = new TreeSet<String> ();
+
+			Trace trace = traceSetIterator.next();
+			traceAnalyze(trace.getTraceId(),trace.getTraceLine());
+		}
+
+		this.finishTime=System.currentTimeMillis()-this.startingTime;
+
+	}
+
+
+	private void traceAnalyze(String traceId, String trace) {
+
+		StringBuffer check=new StringBuffer("");
+		int checkpoint=0;
+
+		for(int i=0;i<trace.length();i++) {
+			i=checkpoint;
+
+			//leggi se non si sfora
+			if((i+1)<trace.length()) {
+
+				//scorri e leggi tanti task quanti il grado
+
+				//
+				//t11t54t63t753t63t432
+				int tcount=0;
+				int j;
+				for(j=i;j<trace.length();j++) {
+
+					if(trace.charAt(j)==delimiter) { 
+						if(tcount==1)
+							checkpoint=j;
+						tcount++;
+						if(tcount>1)
+							break;
+					}
+					check.append(trace.charAt(j));
+				}
+				//to exit
+				i=j-1;
+
+
+				if(check.length()!=0) {
+
+					Node n=null;
+					String edgeLabel=null;
+
+					if(firstTime) {
+						n=graph.addNode(check.toString());
+						n.setAttribute("ui.label", n.getId());
+						nodeIdSuperSet.add(n.getId());
+						nodeIdSet.add(n.getId());
+						firstTime=false;
+					}else {
+
+						if(!nodeIdSuperSet.contains(check.toString())) {
+							//new Node
+							n=graph.addNode(check.toString());
+							n.setAttribute("ui.label", n.getId());
+							nodeIdSuperSet.add(n.getId());
+							nodeIdSet.add(n.getId());
+
+							// so new Edge
+
+							edgeLabel=lastNodeId+check.toString();
+							Edge e=graph.addEdge(edgeLabel, lastNodeId, check.toString(),true);
+							List<TraceRepeatingEdgeInfo> edgeSetInfo = new ArrayList<TraceRepeatingEdgeInfo>();
+
+							edgeSetInfo.add(new TraceRepeatingEdgeInfo(traceId,0));
+							e.setAttribute("info", edgeSetInfo);
+
+							edgeIdSuperSet.add(edgeLabel);
+							edgeIdSet.add(edgeLabel);
+
+						}else {
+							// already contains that node in the superSet
+
+							if(nodeIdSet.contains(check.toString())) {
+								n= graph.getNode(check.toString());
+								n.setAttribute("ui.label", "R_"+check.toString());
+							}else {
+								nodeIdSet.add(check.toString());
+							}
+
+							edgeLabel=lastNodeId+check.toString();
+							// new edge?
+							if(!edgeIdSuperSet.contains(edgeLabel)) {
+								//new Edge
+								if(lastNodeId.equals(check.toString())) {
+									//self repeating
+									Edge e=graph.addEdge(edgeLabel, lastNodeId, check.toString(),true);
+									e.setAttribute("ui.label", "Self_R");
+									List<TraceRepeatingEdgeInfo> edgeSet = new ArrayList<TraceRepeatingEdgeInfo>();
+									edgeSet.add(new TraceRepeatingEdgeInfo(traceId, 1));
+									e.setAttribute("info", edgeSet);
+									edgeIdSuperSet.add(edgeLabel);
+									edgeIdSet.add(edgeLabel);
+								}else {
+									//normal edge
+									Edge e=graph.addEdge(edgeLabel, lastNodeId, check.toString(),true);
+									List<TraceRepeatingEdgeInfo> edgeSetInfo = new ArrayList<TraceRepeatingEdgeInfo>();
+
+									edgeSetInfo.add(new TraceRepeatingEdgeInfo(traceId,0));
+									e.setAttribute("info", edgeSetInfo);
+
+									edgeIdSuperSet.add(edgeLabel);
+									edgeIdSet.add(edgeLabel);
+								}
+							}else {
+								// already contains that Edge in the superSet
+								// but maybe is new in the Set
+
+								if(!edgeIdSet.contains(edgeLabel)) {
+
+									edgeIdSet.add(edgeLabel);
+
+									Edge e= graph.getEdge(edgeLabel);
+									TraceRepeatingEdgeInfo traceEdgeInfo;
+									traceEdgeInfo =new TraceRepeatingEdgeInfo(traceId,0);
+									
+									@SuppressWarnings("unchecked")
+									List<TraceRepeatingEdgeInfo> list = (List<TraceRepeatingEdgeInfo>) e.getAttribute("info");
+									if (list.contains(traceEdgeInfo)) {
+										list.get(list.lastIndexOf(traceEdgeInfo)).repeating();
+									}else {
+										list.add(traceEdgeInfo);
+									}
+
+								}else {
+
+									Edge e= graph.getEdge(edgeLabel);
+
+									if(e.getAttribute("ui.label")==null)
+										e.setAttribute("ui.label", "R");
+
+									TraceRepeatingEdgeInfo traceEdgeInfo;
+
+									traceEdgeInfo =new TraceRepeatingEdgeInfo(traceId,1);
+
+									@SuppressWarnings("unchecked")
+									List<TraceRepeatingEdgeInfo> list = (List<TraceRepeatingEdgeInfo>) e.getAttribute("info");
+
+									if (list.contains(traceEdgeInfo)) {
+										list.get(list.lastIndexOf(traceEdgeInfo)).repeating();
+									}else {
+										list.add(traceEdgeInfo);
+									}
+
+								}
+							}
+						}
+
+					}
+
+
+				}
+				lastNodeId= ""+check.toString()+"";
+				check.delete(0, check.length());
+			}
+		}
+
+	}
+
+	public void GraphImage(String graphName) {
+		System.setProperty("org.graphstream.ui","swing");
+		graph.setAutoCreate(true);
+		graph.setStrict(false);
+		//			System.out.println("Edge set info for the Graph "+graphName+":");
+		//			Iterator<Edge> it= graph.edges().iterator();
+		//			while(it.hasNext()) {
+		//				Edge e = it.next();
+		//				List<TraceRepeatingEdgeInfo> infos = (List<TraceRepeatingEdgeInfo>) e.getAttribute("info");
+		//				Iterator<TraceRepeatingEdgeInfo> infoIt= infos.iterator();
+		//				boolean repeating=false;
+		//				while(infoIt.hasNext()) {
+		//					TraceRepeatingEdgeInfo info = infoIt.next();
+		//					if(info.isRepeating()) {
+		//						System.out.println("edge: "+e.getId()+ " in the trace: "+info.getTraceId()+" is repeating: "+info.getRepetitions()+" times");
+		//						repeating=true;
+		//					}else {
+		//						System.out.println("edge: "+e.getId()+ " in the trace: "+info.getTraceId()+" is not repeating");
+		//					}
+		//					}
+		//			}
+		graph.setAttribute("ui.stylesheet",
+				"graph { fill-color: white; } node { size: 30px, 30px; shape: box; fill-color: yellow; stroke-mode: plain; stroke-color: black; }  node:clicked { fill-color: red;} edge { shape: line; text-alignment: above;  fill-mode: dyn-plain; fill-color: #222, #555, green, yellow; arrow-size: 8px, 3px;}");
+
+		graph.setAttribute("ui.quality");
+		graph.setAttribute("ui.antialias");
+		graph.display();
+
+
+		FileSinkImages pic = FileSinkImages.createDefault();
+		pic.setOutputType(OutputType.PNG);
+		pic.setResolution(Resolutions.HD1080);
+
+		pic.setLayoutPolicy(LayoutPolicy.COMPUTED_FULLY_AT_NEW_IMAGE);
+
+		try {
+
+			pic.writeAll(graph, graphName+".png");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+}
