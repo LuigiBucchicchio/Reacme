@@ -104,26 +104,6 @@ public class LogUtilsRepeatingTrace {
 		}
 	}
 
-
-	public void print2D(String mat[][]) {
-		// Loop through all rows
-		for (int i = 0; i < mat.length; i++) {
-			System.out.println(" ");
-			// Loop through all elements of current row
-			for (int j = 0; j < mat[i].length; j++)
-				System.out.print(mat[i][j] + "| ");
-		}
-		System.out.println(" \n");
-	}
-
-	public void printLog() {
-
-		for (String model : modelsMap.keySet()) {
-			System.out.println(model +" --> "+ modelsMap.get(model));
-		}
-	}
-
-
 	public File[] selectFolder() {
 		JFileChooser chooser = new JFileChooser(".");
 		System.out.println(ANSI_GREEN+"Please select the folder containing the XES Files"+ANSI_GREEN);
@@ -140,25 +120,11 @@ public class LogUtilsRepeatingTrace {
 
 	}
 
-	public void analizeResults(String[][] distanceMatrix) {
-		TreeMap<String, ArrayList<String>> similarityPlot=new TreeMap<String, ArrayList<String>>();
-		for (int i = 1; i < distanceMatrix.length; i++) {
-			for (int j = i+1; j < distanceMatrix.length; j++) {
-				if (similarityPlot.containsKey(distanceMatrix[i][j])) {
-					similarityPlot.get(distanceMatrix[i][j]).add(distanceMatrix[i][0]+"-->"+distanceMatrix[0][j]);
-				}else {
-					ArrayList<String> list=new ArrayList<String>();
-					list.add(distanceMatrix[i][0]+"-->"+distanceMatrix[0][j]);
-					similarityPlot.put(distanceMatrix[i][j], list);
-				}
-			}
-
-		}
-
-		//System.out.println(similarityPlot);
-	}
-
 	public static void main(String[] args) {
+		
+		// max string senza overlap
+		// set di stringhe contenute nella massima stringa senza overlap da levare
+		
 
 
 		LogUtilsRepeatingTrace log=new LogUtilsRepeatingTrace();
@@ -166,14 +132,14 @@ public class LogUtilsRepeatingTrace {
 		File[] files= log.selectFolder();
 
 
-//				PrintStream fileOut;
-//				try {
-//					fileOut = new PrintStream("./ConsoleOutput.txt");
-//					System.setOut(fileOut);
-//				} catch (FileNotFoundException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
+		//				PrintStream fileOut;
+		//				try {
+		//					fileOut = new PrintStream("./ConsoleOutput.txt");
+		//					System.setOut(fileOut);
+		//				} catch (FileNotFoundException e) {
+		//					// TODO Auto-generated catch block
+		//					e.printStackTrace();
+		//				}
 
 		log.getTraces(files);
 
@@ -200,7 +166,120 @@ public class LogUtilsRepeatingTrace {
 			}
 			System.out.println("]\n------------------------------------"
 					+ "------------------------------\n");
+
+			System.out.println("\n--------------------------"
+					+ " Collapsed Set del file : "+files[i].getName()+"--------------------\n");
+			System.out.print("[");
+
+			Set<String> collapsed= collapseRepeatingSet(lista);
+			it=collapsed.iterator();
+			while(it.hasNext()) {
+				System.out.print(it.next()+", ");
+			}
+
+			System.out.println("]\n------------------------------------"
+					+ "------------------------------\n");
+			
+//			System.out.println("\n--------------------------"
+//					+ " Max Repeat Set del file : "+files[i].getName()+"--------------------\n");
+//			System.out.print("[");
+//
+//			Set<String> maxRepeat= generateMaxRepeat(collapsed);
+//			it=maxRepeat.iterator();
+//			while(it.hasNext()) {
+//				System.out.print(it.next()+", ");
+//			}
+//
+//			System.out.println("]\n------------------------------------"
+//					+ "------------------------------\n");
 		}
 
 	}
+
+	private Set<String> collapseRepeatingSet(Set<String> repeatingSet) {
+		Set<String> collapsedRepeatingSet = new TreeSet<String>();
+		String[] repeatingSetArray = repeatingSet.toArray( new String[repeatingSet.size()]);
+		StringBuffer buffer= new StringBuffer();
+		for(int i=0; i<repeatingSetArray.length; i++) {
+
+			if(buffer.isEmpty())
+				buffer.append(repeatingSetArray[i]);
+			else {
+				while(repeatingSetArray[i].startsWith(buffer.toString())) {
+					buffer = new StringBuffer(repeatingSetArray[i]);
+					i++;
+					if(i>=repeatingSetArray.length)
+						break;
+				}
+				collapsedRepeatingSet = decomposeBuffer(buffer.toString(),collapsedRepeatingSet);
+				if(i>=repeatingSetArray.length)
+					break;
+				else
+					buffer = new StringBuffer(repeatingSetArray[i]);
+			}
+
+		}
+		return collapsedRepeatingSet;
+
+	}
+
+	private Set<String> decomposeBuffer(String maxRepeatingTrace, Set<String> collapsedRepeatingSet) {
+		List<String> result = new ArrayList<String>();
+
+		StringBuffer check=new StringBuffer("");
+		int checkpoint=0;
+		for(int i=0;i<maxRepeatingTrace.length();i++) {
+			i=checkpoint;
+			if((i+1)<maxRepeatingTrace.length()) {
+				int tcount=0;
+				int j;
+				for(j=i;j<maxRepeatingTrace.length();j++) {
+					if(maxRepeatingTrace.charAt(j)=='t') { 
+						if(tcount==1)
+							checkpoint=j;
+						tcount++;
+						if(tcount>1)
+							break;
+					}
+					check.append(maxRepeatingTrace.charAt(j));
+				}
+				//to exit
+				i=j-1;
+				if(check.length()==0||!result.contains(check.toString())) {
+					result.add(check.toString());
+				}else break;
+			}
+			check.delete(0, check.length());
+		}
+
+		StringBuffer s= new StringBuffer();
+		Iterator<String> it = result.iterator();
+		while(it.hasNext()) {
+			s.append(it.next());
+			if(!collapsedRepeatingSet.contains(s.toString()))
+				collapsedRepeatingSet.add(s.toString());
+		}
+		return collapsedRepeatingSet;
+	}
+	
+	private Set<String> generateMaxRepeat(Set<String> repeatingSet){
+		Set<String> maxRepeat = new TreeSet<String>();
+		Iterator<String> it = repeatingSet.iterator();
+		StringBuffer s= new StringBuffer();
+		while(it.hasNext()) {
+			if(s.isEmpty())
+				s.append(it.next());
+			else {
+				String stringa = it.next();
+				if(stringa.startsWith(s.toString()))
+					s= new StringBuffer(stringa);
+				else {
+					maxRepeat.add(s.toString());
+					s= new StringBuffer(stringa);
+				}
+			}
+		}
+		return maxRepeat;
+	}
+
 }

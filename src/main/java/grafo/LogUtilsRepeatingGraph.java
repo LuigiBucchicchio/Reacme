@@ -26,7 +26,7 @@ import com.opencsv.CSVWriter;
 
 
 public class LogUtilsRepeatingGraph {
-	
+
 	private File[] fileList;
 	private List<Graph> graphList = new ArrayList<Graph>();
 	private String[][] graphSimilarity;
@@ -50,53 +50,62 @@ public class LogUtilsRepeatingGraph {
 		for (int i = 0; i < listOfFiles.length; i++) {
 			File file=listOfFiles[i];
 			Set<ArrayList<String>> traceSet=new HashSet<ArrayList<String>>();
-			
+
 			List<Trace> traceList = new ArrayList<Trace>();
-			
+
 			try {
 				XLog xlog=parseXES(file.getAbsolutePath());
 				//XLog xlog=parseXES("/home/cippus/Downloads/log (5).xes");
 
 				for (XTrace xTrace : xlog) {
-					
-					
-					
+
+
+
 					ArrayList<String> trace=new ArrayList<String>();
 					//GraphTraceAnalyzer analyzer= new GraphTraceAnalyzer();
-					
+
 					StringBuffer traceLine=new StringBuffer("");
 					// Trace = [t11, t45, t63, t12, t113, t9]
 					// traceLine = t11t45t63t12t113t9
 
 					for (XEvent xevent : xTrace) {
-						
-						
-						
+
+
+
 						String activity=xevent.getAttributes().get("concept:name").toString();
+
+						//conversion for 43 log
+						//String activity = "t"+xevent.getAttributes().get("concept:name").toString();
+
 						//t11
 						//t34
 						traceLine.append(activity);
 
 						trace.add(activity);
+
+
 					}
-					
+
 					Trace genericTrace = new Trace();
 					genericTrace.setTraceLine(traceLine.toString());
 					genericTrace.setActivitySet(trace);
 					genericTrace.setLogId(listOfFiles[i].getName());
 					genericTrace.setTraceId(xTrace.getAttributes().get("concept:name").toString());
 					traceList.add(genericTrace);
-					
+
 					traceSet.add(trace);
 					modelsMap.put(file.getName(), traceSet);	
 
+
+					//analyzer.setTrace(traceLine.toString());
 				}
+
 				GraphLogAnalyzer analyzer = new GraphLogAnalyzer();
 				analyzer.setTraceSet(traceList);
 				analyzer.LogAnalyze();
 				graphList.add(analyzer.getGraph());
 				//analyzer.GraphImage("Log "+listOfFiles[i].getName()+" graph");
-				
+
 				//filePointer++;
 
 				modelsActions.put(file.getName(), traceSet.stream().flatMap(x -> x.stream()).distinct().sorted().collect(Collectors.toCollection(ArrayList::new)));
@@ -107,16 +116,16 @@ public class LogUtilsRepeatingGraph {
 
 		} 
 	}
-	
+
 	public void convertToCSV(String[][] data) {
 		try {
 			File csvFile = new File("DistanceGraph.csv");
 			CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
-//			 CSVWriter writer = new CSVWriter(new FileWriter(csvFile), ';',
-//                     CSVWriter.NO_QUOTE_CHARACTER,
-//                     CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-//                     CSVWriter.DEFAULT_LINE_END);
-			 
+			//			 CSVWriter writer = new CSVWriter(new FileWriter(csvFile), ';',
+			//                     CSVWriter.NO_QUOTE_CHARACTER,
+			//                     CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+			//                     CSVWriter.DEFAULT_LINE_END);
+
 			for (String[] array : data) {
 				writer.writeNext(array);
 			}
@@ -126,7 +135,7 @@ public class LogUtilsRepeatingGraph {
 		} 
 
 	}
-	
+
 	public void print2D(String mat[][]) {
 		// Loop through all rows
 		System.out.println(" ");
@@ -137,7 +146,7 @@ public class LogUtilsRepeatingGraph {
 				System.out.print(" ");
 			}
 		}
-		
+
 		for (int i = 0; i < mat.length; i++) {
 			System.out.print("\n");
 			System.out.print("G"+(i+1)+"|");
@@ -149,10 +158,10 @@ public class LogUtilsRepeatingGraph {
 		System.out.println(" \n");
 	}
 
-	
+
 	public File[] selectFolder() {
 		JFileChooser chooser = new JFileChooser(".");
-		
+
 		System.out.println("\u2705 " +"Please select the folder containing the XES Files" +" \u2705");
 
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -168,9 +177,9 @@ public class LogUtilsRepeatingGraph {
 	}
 
 	public static void main(String[] args) {
-		
+
 		Locale.setDefault(Locale.US);
-		
+
 		LogUtilsRepeatingGraph log=new LogUtilsRepeatingGraph();
 
 		File[] files= log.selectFolder();
@@ -187,11 +196,11 @@ public class LogUtilsRepeatingGraph {
 		//					e.printStackTrace();
 		//				}
 		//
-		
+
 		log.getTraces(files);
-		
+
 		log.graphSimilarity = new String[log.graphList.size()][log.graphList.size()];
-		
+
 		for(int i=0; i< log.graphList.size(); i++) {
 			Graph graph1 = log.graphList.get(i);
 			// j=0
@@ -201,24 +210,28 @@ public class LogUtilsRepeatingGraph {
 					log.graphSimilarity[i][j] = "     ";
 				else {
 					if(log.graphSimilarity[i][j]==null) {
-					GraphComparator comp = new GraphComparator();
-					comp.setGraph1(graph1);
-					comp.setGraph2(graph2);
-					Double metrics = (comp.getMetrics(a))*100;
-					DecimalFormat df = new DecimalFormat("#.00");
-					log.graphSimilarity[i][j] = String.valueOf(df.format(metrics));
-					//log.graphSimilarity[j][i] = String.valueOf(df.format(metrics));
+						GraphComparator comp = new GraphComparator();
+						comp.setGraph1(graph1);
+						comp.setGraph2(graph2);
+						Double metrics = (comp.getMetrics(a))*100;
+
+						// trasformazione da SIMILARITY a DISSIMILARITY
+						metrics = 100 - metrics;
+
+						DecimalFormat df = new DecimalFormat("#.00");
+						log.graphSimilarity[i][j] = String.valueOf(df.format(metrics));
+						//log.graphSimilarity[j][i] = String.valueOf(df.format(metrics));
 					}
 				}
 			}
 		}
 
 		//log.print2D(log.graphSimilarity);
-		
+
 		// Adding the Header with LOG files names
-		
+
 		String [][] similarity = new String [log.graphSimilarity.length+1][log.graphSimilarity.length+1];
-		
+
 		for(int i=0;i<similarity.length;i++) {
 			for(int j=0; j<similarity.length;j++) {
 				if(j==i) {
@@ -240,7 +253,7 @@ public class LogUtilsRepeatingGraph {
 				}
 			}
 		}
-		
+
 		log.convertToCSV(similarity);
 
 		System.out.println("Execution Time:" + String.valueOf(System.currentTimeMillis()-startingTime));

@@ -101,6 +101,7 @@ public class GraphTraceAnalyzer {
 				}
 				//to exit
 				i=j-1;
+			    check.append(trace.charAt(i));
 
 
 				if(check.length()!=0) {
@@ -232,9 +233,4 @@ public class GraphTraceAnalyzer {
 		});
 	}
 	
-	
-	
-	
-
-
 }

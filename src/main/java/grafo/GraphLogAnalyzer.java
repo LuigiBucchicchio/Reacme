@@ -31,7 +31,7 @@ public class GraphLogAnalyzer {
 	private long startingTime;
 	private long finishTime;
 	private char delimiter='t';
-	
+
 	public GraphLogAnalyzer() {
 		graphNumber++;
 		graph = new MultiGraph("RepeatingGraph"+graphNumber);
@@ -76,7 +76,7 @@ public class GraphLogAnalyzer {
 
 
 	public void LogAnalyze() {
-		firstTime= true;
+
 
 		this.startingTime=System.currentTimeMillis();
 		Iterator<Trace> traceSetIterator = traceSet.iterator();
@@ -96,7 +96,8 @@ public class GraphLogAnalyzer {
 
 
 	private void traceAnalyze(String traceId, String trace) {
-
+		firstTime= true;
+		lastNodeId = null;
 		StringBuffer check=new StringBuffer("");
 		int checkpoint=0;
 
@@ -126,6 +127,9 @@ public class GraphLogAnalyzer {
 				//to exit
 				i=j-1;
 
+				// old implement.
+				//			if((i+1)<trace.length()) {
+				//			check.append(trace.charAt(i));
 
 				if(check.length()!=0) {
 
@@ -133,10 +137,15 @@ public class GraphLogAnalyzer {
 					String edgeLabel=null;
 
 					if(firstTime) {
-						n=graph.addNode(check.toString());
-						n.setAttribute("ui.label", n.getId());
-						nodeIdSuperSet.add(n.getId());
-						nodeIdSet.add(n.getId());
+
+						if(!nodeIdSuperSet.contains(check.toString())) {
+
+							n=graph.addNode(check.toString());
+							n.setAttribute("ui.label", n.getId());
+							nodeIdSuperSet.add(n.getId());
+							nodeIdSet.add(n.getId());
+							firstTime=false;
+						}
 						firstTime=false;
 					}else {
 
@@ -204,7 +213,7 @@ public class GraphLogAnalyzer {
 									Edge e= graph.getEdge(edgeLabel);
 									TraceRepeatingEdgeInfo traceEdgeInfo;
 									traceEdgeInfo =new TraceRepeatingEdgeInfo(traceId,0);
-									
+
 									@SuppressWarnings("unchecked")
 									List<TraceRepeatingEdgeInfo> list = (List<TraceRepeatingEdgeInfo>) e.getAttribute("info");
 									if (list.contains(traceEdgeInfo)) {
