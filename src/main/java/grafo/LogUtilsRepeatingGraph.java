@@ -72,10 +72,10 @@ public class LogUtilsRepeatingGraph {
 
 
 
-						String activity=xevent.getAttributes().get("concept:name").toString();
+						//String activity=xevent.getAttributes().get("concept:name").toString();
 
 						//conversion for 43 log
-						//String activity = "t"+xevent.getAttributes().get("concept:name").toString();
+						String activity = "t"+xevent.getAttributes().get("concept:name").toString();
 
 						//t11
 						//t34
@@ -104,7 +104,7 @@ public class LogUtilsRepeatingGraph {
 				analyzer.setTraceSet(traceList);
 				analyzer.LogAnalyze();
 				graphList.add(analyzer.getGraph());
-				//analyzer.GraphImage("Log "+listOfFiles[i].getName()+" graph");
+				analyzer.GraphImage("Log "+listOfFiles[i].getName()+" graph");
 
 				//filePointer++;
 

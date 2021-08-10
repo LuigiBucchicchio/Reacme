@@ -118,9 +118,9 @@ public class GraphComparator {
 						nodeScore = nodeScore + 1.00;
 					}else {
 						if(string1.charAt(0)== 'R' && string2.charAt(0) != 'R')
-							nodeScore = nodeScore +0.5;
+							nodeScore = nodeScore + 1.0;
 						else if(string2.charAt(0) == 'R' && string1.charAt(0) != 'R')
-							nodeScore = nodeScore + 0.5;
+							nodeScore = nodeScore + 1.0;
 						else
 							throw new IllegalArgumentException();
 					}
