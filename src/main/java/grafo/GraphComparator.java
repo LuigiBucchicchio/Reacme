@@ -10,8 +10,16 @@ import org.graphstream.graph.Node;
 
 public class GraphComparator {
 
-	double nodeScore = (double) 0.00;
-	double edgeScore = (double) 0.00;
+	//scores
+	private double edgeEqualScore= (double) 1.0;
+	private double edgeSemiScore= (double) 0.5;
+	private double edgeNotEqualScore = (double) 0.0;
+	private double nodeEqualScore= (double) 1.0;
+	private double nodeSemiScore= (double) 1.0;
+	private double nodeNotEqualScore = (double) 0.0;
+	
+	public double nodeScore = (double) 0.00;
+	public double edgeScore = (double) 0.00;
 	private Graph graph1;
 	private Graph graph2;
 	private List<Node> nodeSuperSet=new ArrayList<Node>();
@@ -95,12 +103,14 @@ public class GraphComparator {
 
 			if(graph1.getNode(n.getId())==null) {
 
-				// score = score + 0
+				nodeScore=nodeScore + nodeNotEqualScore;
+				
 			}else {
 
 				if(graph2.getNode(n.getId())==null) {
 
-					// score = score + 0
+					nodeScore=nodeScore + nodeNotEqualScore;
+					
 				}else {
 
 					Node node1 = graph1.getNode(n.getId());
@@ -115,12 +125,12 @@ public class GraphComparator {
 					// R_t56
 
 					if(string1.equals(string2)) {
-						nodeScore = nodeScore + 1.00;
+						nodeScore = nodeScore + nodeEqualScore;
 					}else {
 						if(string1.charAt(0)== 'R' && string2.charAt(0) != 'R')
-							nodeScore = nodeScore + 1.0;
+							nodeScore = nodeScore + nodeSemiScore;
 						else if(string2.charAt(0) == 'R' && string1.charAt(0) != 'R')
-							nodeScore = nodeScore + 1.0;
+							nodeScore = nodeScore + nodeSemiScore;
 						else
 							throw new IllegalArgumentException();
 					}
@@ -138,12 +148,14 @@ public class GraphComparator {
 			if(graph1.getEdge(e.getId())==null) {
 				
 				// score = score + 0;
+				edgeScore= edgeScore + edgeNotEqualScore;
 				
 			}else {
 				
 				if( graph2.getEdge(e.getId())==null) {
 					
-					//score = score + 0;
+					// score = score + 0;
+					edgeScore= edgeScore + edgeNotEqualScore;
 					
 				}else {
 					
@@ -162,38 +174,24 @@ public class GraphComparator {
 					
 					if(label1 == null) {
 						if(label2 == null) {
-							edgeScore = edgeScore +1.00;
+							edgeScore = edgeScore +edgeEqualScore;
 						}else if(label2.charAt(0)=='R') {
-							edgeScore = edgeScore +0.5;
+							edgeScore = edgeScore +edgeSemiScore;
 						}else {
 							throw new IllegalArgumentException();
 						}
 					}else {
 						if(label2 == null) {
 							if(label1.charAt(0)=='R')
-							edgeScore = edgeScore +0.5;
+							edgeScore = edgeScore +edgeSemiScore;
 							else throw new IllegalArgumentException();
 						}else {
 							if(label1.equals(label2))
-								edgeScore = edgeScore +1.00;
+								edgeScore = edgeScore +edgeEqualScore;
 							else
 								throw new IllegalArgumentException();
 						}
 					}
-						
-						
-						// Edge va dall'ID di un Nodo all'ID di un altro Nodo.
-						// es. t11 -> t56
-						
-						// ha senso invece che l'Edge vada da un Label di un Nodo al Label di un altro Nodo?
-						// es. R_t11 -> t56
-						// es. t45 -> R_t34
-						// es. R_t11 -> R_t77
-						// es. t67 -> t68
-						
-    
-						// Rt34t35 -> t34t35
-						// t34t35 -> Rt34t35
 					
 				}
 			}
@@ -214,4 +212,52 @@ public class GraphComparator {
 		return totalNodeScore + totalEdgeScore;
 	}
 
+	public double getEdgeEqualScore() {
+		return edgeEqualScore;
+	}
+
+	public void setEdgeEqualScore(double edgeEqualScore) {
+		this.edgeEqualScore = edgeEqualScore;
+	}
+
+	public double getEdgeSemiScore() {
+		return edgeSemiScore;
+	}
+
+	public void setEdgeSemiScore(double edgeSemiScore) {
+		this.edgeSemiScore = edgeSemiScore;
+	}
+
+	public double getEdgeNotEqualScore() {
+		return edgeNotEqualScore;
+	}
+
+	public void setEdgeNotEqualScore(double edgeNotEqualScore) {
+		this.edgeNotEqualScore = edgeNotEqualScore;
+	}
+
+	public double getNodeEqualScore() {
+		return nodeEqualScore;
+	}
+
+	public void setNodeEqualScore(double nodeEqualScore) {
+		this.nodeEqualScore = nodeEqualScore;
+	}
+
+	public double getNodeSemiScore() {
+		return nodeSemiScore;
+	}
+
+	public void setNodeSemiScore(double nodeSemiScore) {
+		this.nodeSemiScore = nodeSemiScore;
+	}
+
+	public double getNodeNotEqualScore() {
+		return nodeNotEqualScore;
+	}
+
+	public void setNodeNotEqualScore(double nodeNotEqualScore) {
+		this.nodeNotEqualScore = nodeNotEqualScore;
+	}
+	
 }

@@ -5,14 +5,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.swing.JFileChooser;
 
@@ -30,8 +27,15 @@ public class LogUtilsRepeatingGraph {
 	private File[] fileList;
 	private List<Graph> graphList = new ArrayList<Graph>();
 	private String[][] graphSimilarity;
-	private Map<String,Set<ArrayList<String>>> modelsMap;
-	private Map<String, ArrayList<String>> modelsActions;
+	
+	//scores
+	private boolean scoreChange=false;
+	private double edgeEqualScore= (double) 1.0;
+	private double edgeSemiScore= (double) 0.5;
+	private double edgeNotEqualScore = (double) 0.0;
+	private double nodeEqualScore= (double) 1.0;
+	private double nodeSemiScore= (double) 1.0;
+	private double nodeNotEqualScore = (double) 0.0;
 
 	static double startingTime;
 
@@ -42,8 +46,7 @@ public class LogUtilsRepeatingGraph {
 
 	public void getTraces(File[] listOfFiles) {
 		startingTime=System.currentTimeMillis();
-		modelsMap=new HashMap<String, Set<ArrayList<String>>>();
-		modelsActions=new HashMap<String, ArrayList<String>>();
+
 
 
 		//int filePointer=0;
@@ -72,10 +75,10 @@ public class LogUtilsRepeatingGraph {
 
 
 
-						//String activity=xevent.getAttributes().get("concept:name").toString();
+						String activity=xevent.getAttributes().get("concept:name").toString();
 
 						//conversion for 43 log
-						String activity = "t"+xevent.getAttributes().get("concept:name").toString();
+						//String activity = "t"+xevent.getAttributes().get("concept:name").toString();
 
 						//t11
 						//t34
@@ -94,7 +97,6 @@ public class LogUtilsRepeatingGraph {
 					traceList.add(genericTrace);
 
 					traceSet.add(trace);
-					modelsMap.put(file.getName(), traceSet);	
 
 
 					//analyzer.setTrace(traceLine.toString());
@@ -104,12 +106,11 @@ public class LogUtilsRepeatingGraph {
 				analyzer.setTraceSet(traceList);
 				analyzer.LogAnalyze();
 				graphList.add(analyzer.getGraph());
-				analyzer.GraphImage("Log "+listOfFiles[i].getName()+" graph");
+				//analyzer.GraphImage("Log "+listOfFiles[i].getName()+" graph");
 
 				//filePointer++;
 
-				modelsActions.put(file.getName(), traceSet.stream().flatMap(x -> x.stream()).distinct().sorted().collect(Collectors.toCollection(ArrayList::new)));
-				//System.out.println(modelsActions);
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -121,10 +122,6 @@ public class LogUtilsRepeatingGraph {
 		try {
 			File csvFile = new File("DistanceGraph.csv");
 			CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
-			//			 CSVWriter writer = new CSVWriter(new FileWriter(csvFile), ';',
-			//                     CSVWriter.NO_QUOTE_CHARACTER,
-			//                     CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-			//                     CSVWriter.DEFAULT_LINE_END);
 
 			for (String[] array : data) {
 				writer.writeNext(array);
@@ -136,37 +133,12 @@ public class LogUtilsRepeatingGraph {
 
 	}
 
-	public void print2D(String mat[][]) {
-		// Loop through all rows
-		System.out.println(" ");
-		System.out.print("   ");
-		for(int header =0; header<mat.length; header++) {
-			System.out.print("  G"+(header+1)+"");
-			for(int spacing=3; spacing>= String.valueOf(header+1).length(); spacing--) {
-				System.out.print(" ");
-			}
-		}
-
-		for (int i = 0; i < mat.length; i++) {
-			System.out.print("\n");
-			System.out.print("G"+(i+1)+"|");
-			// Loop through all elements of current row
-			for (int j = 0; j < mat[i].length; j++) {
-				System.out.print(mat[i][j] + "| ");
-			}
-		}
-		System.out.println(" \n");
-	}
-
-
 	public File[] selectFolder() {
 		JFileChooser chooser = new JFileChooser(".");
 
 		System.out.println("\u2705 " +"Please select the folder containing the XES Files" +" \u2705");
 
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		//		FileNameExtensionFilter filter = new FileNameExtensionFilter("XES", "xes");
-		//		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(null);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			System.out.println("You chose to open this folder: " + chooser.getSelectedFile().getName());
@@ -175,30 +147,8 @@ public class LogUtilsRepeatingGraph {
 		return folder.listFiles();
 
 	}
-
-	public static void main(String[] args) {
-
-		Locale.setDefault(Locale.US);
-
-		LogUtilsRepeatingGraph log=new LogUtilsRepeatingGraph();
-
-		File[] files= log.selectFolder();
-		log.fileList= files;
-		System.out.println("\u2705 "+"Please insert the value of Gamma in a range between 0.0 and 1.0"+" \u2705");
-		Scanner tastiera = new Scanner(System.in);
-		double  a = Double.valueOf(tastiera.nextLine());
-		//
-		//				PrintStream fileOut;
-		//				try {
-		//					fileOut = new PrintStream("./ConsoleOutput.txt");
-		//					System.setOut(fileOut);
-		//				} catch (FileNotFoundException e) {
-		//					e.printStackTrace();
-		//				}
-		//
-
-		log.getTraces(files);
-
+	
+public String[][] generateDistanceMatrix(LogUtilsRepeatingGraph log, double a) {
 		log.graphSimilarity = new String[log.graphList.size()][log.graphList.size()];
 
 		for(int i=0; i< log.graphList.size(); i++) {
@@ -211,6 +161,17 @@ public class LogUtilsRepeatingGraph {
 				else {
 					if(log.graphSimilarity[i][j]==null) {
 						GraphComparator comp = new GraphComparator();
+						
+						if(scoreChange) {
+						comp.setEdgeEqualScore(edgeEqualScore);
+						comp.setEdgeNotEqualScore(edgeNotEqualScore);
+						comp.setEdgeSemiScore(edgeSemiScore);
+						comp.setNodeEqualScore(nodeEqualScore);
+						comp.setNodeNotEqualScore(nodeNotEqualScore);
+						comp.setNodeSemiScore(nodeSemiScore);
+						}
+						
+						
 						comp.setGraph1(graph1);
 						comp.setGraph2(graph2);
 						Double metrics = (comp.getMetrics(a))*100;
@@ -226,38 +187,143 @@ public class LogUtilsRepeatingGraph {
 			}
 		}
 
-		//log.print2D(log.graphSimilarity);
-
 		// Adding the Header with LOG files names
 
-		String [][] similarity = new String [log.graphSimilarity.length+1][log.graphSimilarity.length+1];
+		String [][] distanceMatrix = new String [log.graphSimilarity.length+1][log.graphSimilarity.length+1];
 
-		for(int i=0;i<similarity.length;i++) {
-			for(int j=0; j<similarity.length;j++) {
+		for(int i=0;i<distanceMatrix.length;i++) {
+			for(int j=0; j<distanceMatrix.length;j++) {
 				if(j==i) {
-					similarity[i][j] = " ";
+					distanceMatrix[i][j] = " ";
 				}else {
-					if(similarity[i][j]==null) {
+					if(distanceMatrix[i][j]==null) {
 						if(i==0) {
 							File f= log.fileList[j-1];
 							String filename = f.getName();
 							int extension = filename.lastIndexOf('.');
 							String nameOnly = filename.substring(0, extension);
-							similarity[i][j] = nameOnly;
-							similarity[j][i] = nameOnly;
+							distanceMatrix[i][j] = nameOnly;
+							distanceMatrix[j][i] = nameOnly;
 						}else {
-							similarity[i][j] = log.graphSimilarity[i-1][j-1];
-							similarity[j][i] = log.graphSimilarity[j-1][i-1];
+							distanceMatrix[i][j] = log.graphSimilarity[i-1][j-1];
+							distanceMatrix[j][i] = log.graphSimilarity[j-1][i-1];
 						}
 					}
 				}
 			}
 		}
+		return distanceMatrix;
+	}
 
-		log.convertToCSV(similarity);
+
+public double startMenu(Scanner tastiera) {
+	
+    String input = null;
+    double a=(double)0.5;
+    
+    do {
+    	System.out.println("Change the gamma value (default 0.5)? <<y>> or <<n>>");
+    	input = tastiera.nextLine();
+    }while((!input.equals("y")) && (!input.equals("n")));
+
+    if(input.equals("y")) {
+    	System.out.println("\u2705 "+"Please insert the value of Gamma in a range between 0.0 and 1.0"+" \u2705");
+    	a = Double.valueOf(tastiera.nextLine());
+    }
+
+    input=null;
+    do {
+    	System.out.println("Change the Score settings? <<y>> or <<n>>");
+    	input = tastiera.nextLine();
+    }while((!input.equals("y")) && (!input.equals("n")));
+    
+    if(input.equals("y")) {
+        this.scoreChange=true;
+        
+        double newScore= (double)1.0;
+        System.out.println("\u2705 "+"Insert the Node_Equal score (default 1.0)"+" \u2705");
+    	newScore = Double.valueOf(tastiera.nextLine());
+        this.nodeEqualScore =newScore;
+        
+        newScore= (double)0.0;
+        System.out.println("\u2705 "+"Insert the Node_NOT_Equal score (default 0.0)"+" \u2705");
+    	newScore = Double.valueOf(tastiera.nextLine());
+    	this.nodeNotEqualScore =newScore;
+        
+    	newScore= (double)1.0;
+        System.out.println("\u2705 "+"Insert the Node_Semi_Equal score (default 1.0)"+" \u2705");
+    	newScore = Double.valueOf(tastiera.nextLine());
+    	this.nodeSemiScore =newScore;
+    	
+    	newScore= (double)1.0;
+        System.out.println("\u2705 "+"Insert the Edge_Equal score (default 1.0)"+" \u2705");
+    	newScore = Double.valueOf(tastiera.nextLine());
+    	this.edgeEqualScore =newScore;
+    	
+    	newScore= (double)0.0;
+        System.out.println("\u2705 "+"Insert the Edge_NOT_Equal score (default 0.0)"+" \u2705");
+    	newScore = Double.valueOf(tastiera.nextLine());
+    	this.edgeNotEqualScore =newScore;
+    	
+    	newScore= (double)0.5;
+        System.out.println("\u2705 "+"Insert the Edge_Semi_Equal score (default 0.5)"+" \u2705");
+    	newScore = Double.valueOf(tastiera.nextLine());
+    	this.edgeSemiScore =newScore;
+    }
+    return a;
+	
+}
+
+	public static void main(String[] args) {
+
+		Locale.setDefault(Locale.US);
+		System.out.println("Log evaluation - ");
+		LogUtilsRepeatingGraph log=new LogUtilsRepeatingGraph();
+		File[] files= log.selectFolder();
+		log.fileList= files;
+		Scanner tastiera = new Scanner(System.in);
+		double a = log.startMenu(tastiera);
+		
+		//
+		//				PrintStream fileOut;
+		//				try {
+		//					fileOut = new PrintStream("./ConsoleOutput.txt");
+		//					System.setOut(fileOut);
+		//				} catch (FileNotFoundException e) {
+		//					e.printStackTrace();
+		//				}
+		//
+
+		log.getTraces(files);
+		
+		String[][] distanceMatrix = log.generateDistanceMatrix(log, a);
+
+		log.convertToCSV(distanceMatrix);
 
 		System.out.println("Execution Time:" + String.valueOf(System.currentTimeMillis()-startingTime));
-		tastiera.close();
+
+		
+		System.out.println("Use the file \"DistanceGraph.csv\" in project directory to make clusters\n");
+		
+//		String input = null;
+//		
+//		
+//		do {
+//		System.out.println("Clusters Analysis - continue? <<y>> or <<n>>");
+//		input = tastiera.nextLine();
+//		}while((!input.equals("y")) && (!input.equals("n")));
+//		
+//		if(input.equals("n")) {
+//		tastiera.close();
+//		//END
+//		}else {
+//			
+//			//robe
+//			System.out.println(" ... ");
+//			
+//			tastiera.close();
+//		}
 
 	}
+	
 }
