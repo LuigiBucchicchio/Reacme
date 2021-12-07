@@ -9,6 +9,7 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 
 public class GraphComparator {
+	private double logUtilsGamma=(double)0.5;
 
 	//scores
 	private double edgeEqualScore= (double) 1.0;
@@ -58,15 +59,25 @@ public class GraphComparator {
 		Iterator<Node> Nit1 = graph1.nodes().iterator();
 		while(Nit1.hasNext()) {
 			Node n= Nit1.next();
-			if(!nodeSuperSet.contains(n))
-			nodeSuperSet.add(n);
+			boolean duplicate=false;
+			for(int i=0;i<nodeSuperSet.size();i++) {
+				if(n.getId().equals(nodeSuperSet.get(i).getId()))
+					duplicate=true;
+			}
+			if(!duplicate)
+				nodeSuperSet.add(n);
 		}
 
 		Iterator<Node> Nit2 = graph2.nodes().iterator();
 		while(Nit2.hasNext()) {
 			Node n= Nit2.next();
-			if(!nodeSuperSet.contains(n))
-			nodeSuperSet.add(n);
+			boolean duplicate=false;
+			for(int i=0;i<nodeSuperSet.size();i++) {
+				if(n.getId().equals(nodeSuperSet.get(i).getId()))
+					duplicate=true;
+			}
+			if(!duplicate)
+				nodeSuperSet.add(n);
 		}
 
 	}
@@ -75,15 +86,25 @@ public class GraphComparator {
 		Iterator<Edge> Eit1 = graph1.edges().iterator();
 		while(Eit1.hasNext()) {
 			Edge e= Eit1.next();
-			if(!edgeSuperSet.contains(e))
-			edgeSuperSet.add(e);
+			boolean duplicate=false;
+			for(int i=0;i<edgeSuperSet.size();i++) {
+				if(e.getId().equals(edgeSuperSet.get(i).getId()))
+					duplicate=true;
+			}
+			if(!duplicate)
+				edgeSuperSet.add(e);
 		}
 
 		Iterator<Edge> Eit2 = graph2.edges().iterator();
 		while(Eit2.hasNext()) {
 			Edge e= Eit2.next();
-			if(!edgeSuperSet.contains(e))
-			edgeSuperSet.add(e);
+			boolean duplicate=false;
+			for(int i=0;i<edgeSuperSet.size();i++) {
+				if(e.getId().equals(edgeSuperSet.get(i).getId()))
+					duplicate=true;
+			}
+			if(!duplicate)
+				edgeSuperSet.add(e);
 		}
 	}
 
@@ -147,15 +168,41 @@ public class GraphComparator {
 			
 			if(graph1.getEdge(e.getId())==null) {
 				
-				// score = score + 0;
-				edgeScore= edgeScore + edgeNotEqualScore;
+				if(logUtilsGamma!=(double)0.0) {
+					edgeScore= edgeScore + edgeNotEqualScore;
+				}else {
+					
+					//caso particolare
+					
+					String firstActivity= e.getId().substring(0,(e.getId().length()/2));
+					String secondActivity= e.getId().substring(e.getId().length()/2, e.getId().length());
+					boolean same=firstActivity.equals(secondActivity);
+					if(same&&graph1.getNode(firstActivity)!=null) {
+						edgeScore=edgeScore+edgeSemiScore;
+					}else {
+						edgeScore=edgeScore+edgeNotEqualScore;
+					}
+				}
 				
 			}else {
 				
 				if( graph2.getEdge(e.getId())==null) {
 					
-					// score = score + 0;
-					edgeScore= edgeScore + edgeNotEqualScore;
+					if(logUtilsGamma!=(double)0.0) {
+						edgeScore = edgeScore + edgeNotEqualScore;
+					}else {
+						
+						//caso particolare
+						
+						String firstActivity= e.getId().substring(0,(e.getId().length()/2));
+						String secondActivity= e.getId().substring(e.getId().length()/2, e.getId().length());
+						boolean same=firstActivity.equals(secondActivity);
+						if(same&&graph2.getNode(firstActivity)!=null) {
+							edgeScore=edgeScore+edgeSemiScore;
+						}else {
+							edgeScore=edgeScore+edgeNotEqualScore;
+						}
+					}
 					
 				}else {
 					
@@ -165,12 +212,7 @@ public class GraphComparator {
 					String label1 = (String) edge1.getAttribute("ui.label");
 					String label2 = (String) edge2.getAttribute("ui.label");
 					
-					// selfR , R , null 
-						
-						// selfRt11t11 -> selfRt11t11
-						
-						// Rt34t35 -> Rt34t35
-						// t56t67 -> t56t67
+					//R , null 
 					
 					if(label1 == null) {
 						if(label2 == null) {
@@ -258,6 +300,14 @@ public class GraphComparator {
 
 	public void setNodeNotEqualScore(double nodeNotEqualScore) {
 		this.nodeNotEqualScore = nodeNotEqualScore;
+	}
+
+	public double getLogUtilsGamma() {
+		return logUtilsGamma;
+	}
+
+	public void setLogUtilsGamma(double logUtilsGamma) {
+		this.logUtilsGamma = logUtilsGamma;
 	}
 	
 }

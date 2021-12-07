@@ -104,6 +104,13 @@ public class LogUtilsRepeatingTrace {
 
 					for (XEvent xevent : xTrace) {
 						String activity=xevent.getAttributes().get("concept:name").toString();
+						
+						// 'A' 'B' 'C' activities
+//						StringBuffer activityT= new StringBuffer("");
+//						activityT.append("t");
+//						activityT.append(activity);
+//						activity=activityT.toString();
+						
 						logActivitySet.add(activity);
 						traceLine.append(activity);
 
@@ -175,7 +182,7 @@ public class LogUtilsRepeatingTrace {
 		System.out.println("Repeating set generation...");
 		log.getTraces(files);
 
-		//log.printRepeatingSet(files);
+		log.printRepeatingSet(files);
 
 		long repTime = System.currentTimeMillis()-startingTime;
 		long minutes = (repTime / 1000) / 60;

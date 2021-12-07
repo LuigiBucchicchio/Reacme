@@ -87,15 +87,142 @@ public class GraphLogAnalyzer {
 			edgeIdSet = new TreeSet<String> ();
 
 			Trace trace = traceSetIterator.next();
-			traceAnalyze(trace.getTraceId(),trace.getTraceLine());
+			//traceLineAnalyze(trace.getTraceId(),trace.getTraceLine());
+			traceListAnalyze(trace.getTraceId(),trace.getActivitySequence());
 		}
 
 		this.finishTime=System.currentTimeMillis()-this.startingTime;
 
 	}
+	
+	
+	private void traceListAnalyze(String traceId, List<String> trace) {
+		Iterator<String> it = trace.iterator();
+		firstTime=true;
+		lastNodeId=null;
+		while(it.hasNext()) {
+			String activity = it.next();
+			
+			Node n=null;
+			String edgeLabel=null;
+
+			if(firstTime) {
+
+				if(!nodeIdSuperSet.contains(activity)) {
+
+					n=graph.addNode(activity);
+					n.setAttribute("ui.label", n.getId());
+					nodeIdSuperSet.add(n.getId());
+					nodeIdSet.add(n.getId());
+					firstTime=false;
+				}
+				firstTime=false;
+			}else {
+
+				if(!nodeIdSuperSet.contains(activity)) {
+					//new Node
+					n=graph.addNode(activity);
+					n.setAttribute("ui.label", n.getId());
+					nodeIdSuperSet.add(n.getId());
+					nodeIdSet.add(n.getId());
+
+					// so new Edge
+
+					edgeLabel=lastNodeId+activity;
+					Edge e=graph.addEdge(edgeLabel, lastNodeId, activity,true);
+					List<TraceRepeatingEdgeInfo> edgeSetInfo = new ArrayList<TraceRepeatingEdgeInfo>();
+
+					edgeSetInfo.add(new TraceRepeatingEdgeInfo(traceId,0));
+					e.setAttribute("info", edgeSetInfo);
+
+					edgeIdSuperSet.add(edgeLabel);
+					edgeIdSet.add(edgeLabel);
+
+				}else {
+					// already contains that node in the superSet
+
+					if(nodeIdSet.contains(activity)) {
+						n= graph.getNode(activity);
+						n.setAttribute("ui.label", "R_"+n.getId());
+					}else {
+						nodeIdSet.add(activity);
+					}
+
+					edgeLabel=lastNodeId+activity;
+					// new edge?
+					if(!edgeIdSuperSet.contains(edgeLabel)) {
+						//new Edge
+						if(lastNodeId.equals(activity)) {
+							//self repeating
+							Edge e=graph.addEdge(edgeLabel, lastNodeId, activity,true);
+							e.setAttribute("ui.label", "R");
+							List<TraceRepeatingEdgeInfo> edgeSet = new ArrayList<TraceRepeatingEdgeInfo>();
+							edgeSet.add(new TraceRepeatingEdgeInfo(traceId, 1));
+							e.setAttribute("info", edgeSet);
+							edgeIdSuperSet.add(edgeLabel);
+							edgeIdSet.add(edgeLabel);
+						}else {
+							//normal edge
+							Edge e=graph.addEdge(edgeLabel, lastNodeId, activity,true);
+							List<TraceRepeatingEdgeInfo> edgeSetInfo = new ArrayList<TraceRepeatingEdgeInfo>();
+
+							edgeSetInfo.add(new TraceRepeatingEdgeInfo(traceId,0));
+							e.setAttribute("info", edgeSetInfo);
+
+							edgeIdSuperSet.add(edgeLabel);
+							edgeIdSet.add(edgeLabel);
+						}
+					}else {
+						// already contains that Edge in the superSet
+						// but maybe is new in the Set
+
+						if(!edgeIdSet.contains(edgeLabel)) {
+
+							edgeIdSet.add(edgeLabel);
+
+							Edge e= graph.getEdge(edgeLabel);
+							TraceRepeatingEdgeInfo traceEdgeInfo;
+							traceEdgeInfo =new TraceRepeatingEdgeInfo(traceId,0);
+
+							@SuppressWarnings("unchecked")
+							List<TraceRepeatingEdgeInfo> list = (List<TraceRepeatingEdgeInfo>) e.getAttribute("info");
+							if (list.contains(traceEdgeInfo)) {
+								list.get(list.lastIndexOf(traceEdgeInfo)).repeating();
+							}else {
+								list.add(traceEdgeInfo);
+							}
+
+						}else {
+
+							Edge e= graph.getEdge(edgeLabel);
+
+							if(e.getAttribute("ui.label")==null)
+								e.setAttribute("ui.label", "R");
+
+							TraceRepeatingEdgeInfo traceEdgeInfo;
+
+							traceEdgeInfo =new TraceRepeatingEdgeInfo(traceId,1);
+
+							@SuppressWarnings("unchecked")
+							List<TraceRepeatingEdgeInfo> list = (List<TraceRepeatingEdgeInfo>) e.getAttribute("info");
+
+							if (list.contains(traceEdgeInfo)) {
+								list.get(list.lastIndexOf(traceEdgeInfo)).repeating();
+							}else {
+								list.add(traceEdgeInfo);
+							}
+
+						}
+					}
+				}
+
+			}
+			lastNodeId=activity;
+		}
+	}
 
 
-	private void traceAnalyze(String traceId, String trace) {
+	private void traceLineAnalyze(String traceId, String trace) {
 		firstTime= true;
 		lastNodeId = null;
 		StringBuffer check=new StringBuffer("");
@@ -185,7 +312,7 @@ public class GraphLogAnalyzer {
 								if(lastNodeId.equals(check.toString())) {
 									//self repeating
 									Edge e=graph.addEdge(edgeLabel, lastNodeId, check.toString(),true);
-									e.setAttribute("ui.label", "Self_R");
+									e.setAttribute("ui.label", "R");
 									List<TraceRepeatingEdgeInfo> edgeSet = new ArrayList<TraceRepeatingEdgeInfo>();
 									edgeSet.add(new TraceRepeatingEdgeInfo(traceId, 1));
 									e.setAttribute("info", edgeSet);
@@ -255,6 +382,38 @@ public class GraphLogAnalyzer {
 			}
 		}
 
+	}
+	
+	public void printNodeSet() {
+		Iterator<Node> nodeIt = this.graph.nodes().iterator();
+		System.out.print("[");
+		while(nodeIt.hasNext()) {
+			Node n = nodeIt.next();
+			String label = (String) n.getAttribute("ui.label");
+			if(!(label.charAt(0)=='R'))
+				System.out.print(n.getId()+ "");
+			else System.out.print(label);
+			
+			if(nodeIt.hasNext())
+				System.out.print(",");
+		}
+		System.out.print("]\n\n");
+	}
+	
+	public void printEdgeSet() {
+		Iterator<Edge> edgeIt = this.graph.edges().iterator();
+		System.out.print("[");
+		while(edgeIt.hasNext()) {
+			Edge e = edgeIt.next();
+			String label = (String) e.getAttribute("ui.label");
+			if(label==null)
+				System.out.print(e.getId()+ ", ");
+			else System.out.print(e.getId()+ ","+label+"");
+		
+			if(edgeIt.hasNext())
+				System.out.print(",");
+		}
+		System.out.print("]\n\n");
 	}
 
 	public void GraphImage(String graphName) {

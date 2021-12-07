@@ -4,16 +4,16 @@ import java.util.List;
 
 public class Trace implements Comparable<Trace>{
 	
-	private List<String> activitySet;
+	private List<String> activitySequence;
 	private String traceLine;
 	private String traceId;
 	private String logId;
 	
-	public List<String> getActivitySet() {
-		return activitySet;
+	public List<String> getActivitySequence() {
+		return activitySequence;
 	}
-	public void setActivitySet(List<String> activitySet) {
-		this.activitySet = activitySet;
+	public void setActivitySequence(List<String> activitySet) {
+		this.activitySequence = activitySet;
 	}
 	public String getTraceLine() {
 		return traceLine;
@@ -39,7 +39,9 @@ public class Trace implements Comparable<Trace>{
 			return 0;
 		else return this.traceId.compareTo(o.getTraceId());
 	}
-	
+	public int getTraceLength() {
+		return this.activitySequence.size();
+	}
 	
 
 }
