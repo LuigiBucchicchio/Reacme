@@ -12,23 +12,54 @@ public class BatchAnalysis {
 
 		startup();
 
-		for(double l=(double)0.0;l<=(double)1.0;l=l+(double)0.5) {
-		
-		for(double i= (double)0.0; i<=(double)1.0;i=i+(double)0.25) {
+		double repeatingIncr=(double) 0.5;
+		double repeatingEdge=0.0;
+		double repeatingNode=0.0;
 
-			for(double j=(double)0.0;j<=(double)1.0;j=j+(double)0.1) {
-				iteration(i,j,l);
+		//solo nodi
+		double gamma=1.0;
+		
+		// scenari E-commerce, neutro, Maggioli
+		for(repeatingNode= (double)0.0;repeatingNode<=(double) 1.0;repeatingNode=repeatingNode+repeatingIncr) {
+			iteration(gamma,repeatingEdge,repeatingNode);
+		}
+
+		//reset
+		repeatingNode=(double) 0.0;
+
+		//solo archi
+		gamma=0.0;
+
+		// scenari E-commerce, neutro, Maggioli
+		for(repeatingEdge=(double) 0.0;repeatingEdge<=(double) 1.0;repeatingEdge=repeatingEdge+repeatingIncr) {
+			iteration(gamma, repeatingEdge, repeatingNode);
+		}
+
+		//reset
+		repeatingEdge=(double) 0.0;
+		
+		//50-50
+		gamma=0.5;
+
+		// scenari (E-commerce, neutro, Maggioli) Archi <-X-> (E-commerce, neutro, Maggioli) Nodi
+		for(repeatingNode = (double)0.0;repeatingNode<=(double)1.0;repeatingNode=repeatingNode+repeatingIncr) {
+			for(repeatingEdge=(double)0.0;repeatingEdge<=(double)1.0; repeatingEdge=repeatingEdge+repeatingIncr) {
+				iteration(gamma, repeatingEdge, repeatingNode);
 			}
+		}
 
-		}
-		}
 		System.out.println("END");
-		
+
 	}
 
 	private static void iteration(double a, double b, double c) {
 		LogUtilsRepeatingGraph log=new LogUtilsRepeatingGraph();
 		log.setFileList(fileList);
+		
+		int x = fileList.length;
+		log.setTraceNum(new int[x]);
+		log.setAvgTraceLen(new double[x]);
+		
 		log.setScoreChange(true);
 		log.setGamma(a);
 		log.setNodeEqualScore((double)1.0);
@@ -56,6 +87,7 @@ public class BatchAnalysis {
 		}
 		File folder= new File(chooser.getSelectedFile().getAbsolutePath());
 		fileList= folder.listFiles();
+		
 	}
 
 }

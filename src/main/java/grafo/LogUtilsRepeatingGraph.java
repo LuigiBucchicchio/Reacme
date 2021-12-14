@@ -92,16 +92,16 @@ public class LogUtilsRepeatingGraph {
 				analyzer.LogAnalyze();
 				graphList.add(analyzer.getGraph());
 				
-				System.out.println("--------------------------- Node list of log graph:"+fileList[i].getName()+""
-						+ "---------------------------");
-				analyzer.printNodeSet();
-				System.out.println("--------------------------- Edge list of log graph:"+fileList[i].getName()+""
-						+ "---------------------------");
-				analyzer.printEdgeSet();
-				System.out.println("---------------------------"
-						+ "---------------------------\n");
-				
-				//analyzer.GraphImage("Log "+fileList[i].getName()+" graph");
+//				System.out.println("--------------------------- Node list of log graph:"+fileList[i].getName()+""
+//						+ "---------------------------");
+//				analyzer.printNodeSet();
+//				System.out.println("--------------------------- Edge list of log graph:"+fileList[i].getName()+""
+//						+ "---------------------------");
+//				analyzer.printEdgeSet();
+//				System.out.println("---------------------------"
+//						+ "---------------------------\n");
+//				
+//				analyzer.GraphImage("Log "+fileList[i].getName()+" graph");
 				
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -111,8 +111,8 @@ public class LogUtilsRepeatingGraph {
 			for(int l=0;l<traceList.size();l++) {
 				tot=tot+traceList.get(l).getTraceLength();
 			}
-			avgTraceLen[i] = tot/numeroTracce;
-			traceNum[i]=numeroTracce;
+			getAvgTraceLen()[i] = tot/numeroTracce;
+			getTraceNum()[i]=numeroTracce;
 		} 
 	}
 
@@ -172,8 +172,8 @@ public class LogUtilsRepeatingGraph {
 		
 		this.fileList= folder.listFiles();
 		int x = fileList.length;
-		traceNum = new int[x];
-		avgTraceLen = new double[x];
+		setTraceNum(new int[x]);
+		setAvgTraceLen(new double[x]);
 
 	}
 	
@@ -330,9 +330,9 @@ public void startMenu(Scanner tastiera) {
 		System.out.println("Execution Time:" + String.valueOf(System.currentTimeMillis()-startingTime));
 		
 		System.out.println("Use the file "+log.getOutputFileName()+" in project directory to make clusters\n");
-		
+//		
 //		DatabaseConnection dc= new DatabaseConnection(log);
-//		dc.insertAll("A", "192 Log");
+//		dc.insertAll("B", "Modelli validazione con varianti, non perturbati");
 
 	}
 	
@@ -448,6 +448,14 @@ public void startMenu(Scanner tastiera) {
 
 	public double[] getAvgTraceLen() {
 		return avgTraceLen;
+	}
+
+	public void setAvgTraceLen(double[] avgTraceLen) {
+		this.avgTraceLen = avgTraceLen;
+	}
+
+	public void setTraceNum(int[] traceNum) {
+		this.traceNum = traceNum;
 	}
 	
 	
