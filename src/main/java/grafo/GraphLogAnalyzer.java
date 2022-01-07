@@ -116,6 +116,8 @@ public class GraphLogAnalyzer {
 					nodeIdSet.add(n.getId());
 					firstTime=false;
 				}
+				if(!nodeIdSet.contains(activity))
+				nodeIdSet.add(activity);
 				firstTime=false;
 			}else {
 

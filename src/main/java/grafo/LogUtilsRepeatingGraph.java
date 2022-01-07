@@ -100,7 +100,7 @@ public class LogUtilsRepeatingGraph {
 //				analyzer.printEdgeSet();
 //				System.out.println("---------------------------"
 //						+ "---------------------------\n");
-//				
+				
 //				analyzer.GraphImage("Log "+fileList[i].getName()+" graph");
 				
 			} catch (Exception e) {
@@ -117,7 +117,8 @@ public class LogUtilsRepeatingGraph {
 	}
 
 	public void convertToCSV(String[][] data) {
-		int logNumber=fileList.length;
+		int nLog = fileList.length;
+		String directoryName = fileList[0].getParentFile().getName();
 		
 		String Sgamma= String.valueOf(gamma);
 		Sgamma=Sgamma.replace(".0", "");
@@ -141,11 +142,14 @@ public class LogUtilsRepeatingGraph {
 		s6=s6.replace(".0", "");
 		s6=s6.replace(".", "");
 		
-		setOutputFileName("DistanceGraph_"+logNumber+"Logs_gamma"+Sgamma+"_"+s1+s2+s3+"_"+s4+s5+s6+".csv");
+		if(getOutputFileName().equals(""))
+		setOutputFileName("DistanceGraph_"+directoryName+"_"+nLog+"Logs_gamma"+Sgamma+"_"+s1+s2+s3+"_"+s4+s5+s6+".csv");
 		
 		try {
 			
-			File csvFile = new File(getOutputFileName());
+			File f = new File("output");
+			f.mkdir();
+			File csvFile = new File(f.getAbsolutePath()+"\\"+getOutputFileName());
 			CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
 
 			for (String[] array : data) {
@@ -329,7 +333,7 @@ public void startMenu(Scanner tastiera) {
 
 		System.out.println("Execution Time:" + String.valueOf(System.currentTimeMillis()-startingTime));
 		
-		System.out.println("Use the file "+log.getOutputFileName()+" in project directory to make clusters\n");
+		System.out.println("Use the file "+log.getOutputFileName()+" in output directory to make clusters\n");
 //		
 //		DatabaseConnection dc= new DatabaseConnection(log);
 //		dc.insertAll("B", "Modelli validazione con varianti, non perturbati");

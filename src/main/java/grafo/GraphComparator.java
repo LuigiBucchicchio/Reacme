@@ -174,14 +174,14 @@ public class GraphComparator {
 					
 					//caso particolare
 					
-					String firstActivity= e.getId().substring(0,(e.getId().length()/2));
-					String secondActivity= e.getId().substring(e.getId().length()/2, e.getId().length());
-					boolean same=firstActivity.equals(secondActivity);
-					if(same&&graph1.getNode(firstActivity)!=null) {
-						edgeScore=edgeScore+edgeSemiScore;
-					}else {
+//					String firstActivity= e.getId().substring(0,(e.getId().length()/2));
+//					String secondActivity= e.getId().substring(e.getId().length()/2, e.getId().length());
+//					boolean same=firstActivity.equals(secondActivity);
+//					if(same&&graph1.getNode(firstActivity)!=null) {
+//						edgeScore=edgeScore+edgeSemiScore;
+//					}else {
 						edgeScore=edgeScore+edgeNotEqualScore;
-					}
+//					}
 				}
 				
 			}else {
@@ -194,14 +194,14 @@ public class GraphComparator {
 						
 						//caso particolare
 						
-						String firstActivity= e.getId().substring(0,(e.getId().length()/2));
-						String secondActivity= e.getId().substring(e.getId().length()/2, e.getId().length());
-						boolean same=firstActivity.equals(secondActivity);
-						if(same&&graph2.getNode(firstActivity)!=null) {
-							edgeScore=edgeScore+edgeSemiScore;
-						}else {
+//						String firstActivity= e.getId().substring(0,(e.getId().length()/2));
+//						String secondActivity= e.getId().substring(e.getId().length()/2, e.getId().length());
+//						boolean same=firstActivity.equals(secondActivity);
+//						if(same&&graph2.getNode(firstActivity)!=null) {
+//							edgeScore=edgeScore+edgeSemiScore;
+//						}else {
 							edgeScore=edgeScore+edgeNotEqualScore;
-						}
+//						}
 					}
 					
 				}else {
