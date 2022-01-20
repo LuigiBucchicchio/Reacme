@@ -23,13 +23,13 @@ public class BatchAnalysis {
 	public static File[] fileList;
 
 	/**
-	 * @author luigi.bucchicchioAtgmail.com
 	 * Analisi di XES files in cartella o in cartella di cartelle.
 	 * Ritorna un CSV rappresentante una Distance Matrix per ogni variazione di parametro in Batch
 	 * Il parametro che varia è il RepeatingScore, ovvero il punteggio che si dà ad un arco/transizione o ad un nodo/attività che è discordante nella ripetizione fra due log (uno Repeating e l'altro NotRepeating)
 	 * Di default, "RepeatingIncr" incrementa di 0.5 (facendo 0.0;0.5;1.0) ma può essere impostato anche diversamente, es. 0.10 (facendo 0.0;0.10;0.20...)
 	 * Gamma invece cambia in modo discreto 0.0;0.5;1.0 e deve essere modificato Hard-Coded.
 	 * Il succo è che vengono effettuate multipli richiami ad "iteration()" avendo cura di impostare bene la lista dei file XES ed i parametri
+	 * @author luigi.bucchicchioAtgmail.com
 	 * @param args
 	 * @throws IOException
 	 * @throws InterruptedException
@@ -115,10 +115,11 @@ public class BatchAnalysis {
 
 
 	/**
-	 * @author luigi.bucchicchioAtgmail.com
 	 * Segue circa il MAIN di logUtilsRepeatingGraph, rappresentando una singola iterazione per configurazione di parametri.
 	 * Da notare i passi base dell'algoritmo:
 	 * listaFile(XES), settaggio parametri, analyzeTraces(), generateDistanceMatrix(), convertToCSV()
+	 * @author luigi.bucchicchioAtgmail.com
+	 * 
 	 * @param a Valore di Gamma tra 0.0 e 1.0, rappresentando il peso tra Archi/Transizioni(0 max) e Nodi/Attività(1 max)
 	 * @param b Punteggio tra un Nodo/Attività Repeating e lo stesso nodo NotRepeating (es. 1.0 Uguali; 0.0 Diversi;) 
 	 * @param c Punteggio tra un Arco/Transizone Repeating e lo stesso arco NotRepeating (es. 1.0 Uguali; 0.0 Diversi)
@@ -148,8 +149,9 @@ public class BatchAnalysis {
 	}
 
 	/**
-	 * @author luigi.bucchicchioAtgmail.com
 	 * crea lista file (aspettandosi una lista di file XES)
+	 * @author luigi.bucchicchioAtgmail.com
+	 * 
 	 */
 	private static void startup() {
 		
@@ -168,8 +170,9 @@ public class BatchAnalysis {
 	}
 	
 	/**
-	 * @author luigi.bucchicchioAtgmail.com
 	 * crea lista di liste file (aspettandosi una cartella con cartelle di file XES)
+	 * @author luigi.bucchicchioAtgmail.com
+	 * 
 	 */
 	private static void nestedFolderStartup() {
 		
