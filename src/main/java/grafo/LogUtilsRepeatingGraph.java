@@ -21,14 +21,44 @@ import org.graphstream.graph.Graph;
 
 import com.opencsv.CSVWriter;
 
-
+/**
+ * 
+ * @author luigi.bucchicchioAtgmail.com
+ * 
+ * Classe che permette di analizzare e confrontare files di Log (XES).
+ * Vengono creati dei Grafi riconducibili ad una lista di Nodi/attività e una lista di Archi/Transizioni
+ * Nodi e Archi possono essere Repeating o Not Repeating (ripetendosi più di una volta per traccia o meno)
+ * Ogni grafo rappresenta un Log, riassumendo l'analisi di tutte le tracce.
+ * I grafi generati vengono così comparati e come output viene data una DistanceMatrix in CSV.
+ * 
+ * per funzionare, dopo aver creato un Oggetto di tipo LogUtilsRepeatingGraph, va eseguito il main
+ * oppure vanno eseguiti i seguenti passaggi:
+ * 
+ * 1) selectFolder() o in alternativa setFileList()
+ * 
+ * setTraceNum() (opzionale)
+ * setAvgTraceLen() (opzionale)
+ * 
+ * 2) startMenu() o in alternativa importare setScoreChange(true) oppure setScoreChange(false). Nel primo caso impostare anche:
+ * setGamma()
+ * setNodeEqualsScore()
+ * setNodeNotEqualScore()
+ * setNodeSemiScore()
+ * setEdgeEqualsScore()
+ * setEdgeNotEqualsScore()
+ * setEdgeSemiScore()
+ * 
+ * 3) analyzeTraces()
+ * 4) generateDistanceMatrix()
+ * 5) convertToCSV()
+ */
 public class LogUtilsRepeatingGraph {
 
 	private File[] fileList;
 	private int[] traceNum;
 	private double[] avgTraceLen;
 	private List<Graph> graphList = new ArrayList<Graph>();
-	private String[][] graphSimilarity;
+	private String[][] graphDissimilarity;
 	private String outputFileName= new String("");
 	
 	//scores
@@ -43,11 +73,30 @@ public class LogUtilsRepeatingGraph {
 	
 	static double startingTime;
 	
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @param filePath 
+	 * @return XLog structured file
+	 * @throws Exception
+	 */
 	public XLog parseXES(String filePath) throws Exception {
 		XesXmlParser parser = new XesXmlParser();
 		return parser.parse(new File(filePath)).get(0);	
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * L'algoritmo analizza le tracce di ogni singolo XES, costruendosi una lista di Grafi che rappesentano ognuno un Log.
+	 * 
+	 * le tracce vengono lette in due diversi modi:
+	 * come TraceLine, in una singola stringa: es. "ABBBABBABABA" "a1a2a3a4a5a1a2a3" "activity1activity2activity3"
+	 * come Sequenza di attività in una lista: es. "[ A,B,B,B,.....] [a1,a2,a3...] [activity1,activity2....]
+	 * sebbene si utilizzi prettamente il secondo metodo di lettura, alcuni algortimi sulle stringhe possono richiedere la TraceLine
+	 * 
+	 * Info aggiuntive come il log di provenienza e l'id della traccia vengono salvate anche se non vengono usate
+	 * Tutte le info vengono salvate mediante una classe di supporto, Trace, che confluisce in una traceList che viene passata all'analyzer
+	 * l'analyzer eseguirà LogAnalyze() creando un Graph, ottenibile con getGraph() e aggiunto in una lista di Grafi.
+	 */
 	public void analyzeTraces() {
 		startingTime=System.currentTimeMillis();
 
@@ -58,6 +107,7 @@ public class LogUtilsRepeatingGraph {
 
 			try {
 				XLog xlog=parseXES(file.getAbsolutePath());
+				//da cippus lives
 				//XLog xlog=parseXES("/home/cippus/Downloads/log (5).xes");
 
 				for (XTrace xTrace : xlog) {
@@ -92,6 +142,8 @@ public class LogUtilsRepeatingGraph {
 				analyzer.LogAnalyze();
 				graphList.add(analyzer.getGraph());
 				
+				// Useful Info, can be used in combo with "consoleOutToFile()" (see main comment)
+				
 //				System.out.println("--------------------------- Node list of log graph:"+fileList[i].getName()+""
 //						+ "---------------------------");
 //				analyzer.printNodeSet();
@@ -100,6 +152,8 @@ public class LogUtilsRepeatingGraph {
 //				analyzer.printEdgeSet();
 //				System.out.println("---------------------------"
 //						+ "---------------------------\n");
+				
+				// GraphImage has Heavy RAM usage-> (use with nested folder + batch).equals("YOUR PC GOT NUKED") returned "true".
 				
 //				analyzer.GraphImage("Log "+fileList[i].getName()+" graph");
 				
@@ -111,11 +165,18 @@ public class LogUtilsRepeatingGraph {
 			for(int l=0;l<traceList.size();l++) {
 				tot=tot+traceList.get(l).getTraceLength();
 			}
+			
 			getAvgTraceLen()[i] = tot/numeroTracce;
 			getTraceNum()[i]=numeroTracce;
 		} 
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @param data La distanceMatrix
+	 * In output, il CSV con il nome formattato come segue:
+	 * DistanceGraph_nomeCartella_numeroFilesLogs_gamma_parametriNodiOAttività_parametriArchiOTransizioni.csv
+	 */
 	public void convertToCSV(String[][] data) {
 		int nLog = fileList.length;
 		String directoryName = fileList[0].getParentFile().getName();
@@ -142,14 +203,17 @@ public class LogUtilsRepeatingGraph {
 		s6=s6.replace(".0", "");
 		s6=s6.replace(".", "");
 		
+		// TUTT' STUBBURDELL' PE' RINOMINA' L'OUTPUT
+		
 		if(getOutputFileName().equals(""))
 		setOutputFileName("DistanceGraph_"+directoryName+"_"+nLog+"Logs_gamma"+Sgamma+"_"+s1+s2+s3+"_"+s4+s5+s6+".csv");
 		
 		try {
-			
+			//cartellina
 			File f = new File("output");
 			f.mkdir();
 			File csvFile = new File(f.getAbsolutePath()+"\\"+getOutputFileName());
+			//scriba, pls
 			CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
 
 			for (String[] array : data) {
@@ -162,6 +226,10 @@ public class LogUtilsRepeatingGraph {
 
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * Selettore di cartella
+	 */
 	public void selectFolder() {
 		JFileChooser chooser = new JFileChooser(".");
 
@@ -172,6 +240,9 @@ public class LogUtilsRepeatingGraph {
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			System.out.println("You chose to open this folder: " + chooser.getSelectedFile().getName());
 		}
+		
+		// Ce manca l'else con scritto "TI SI SBAGLIATO, FRA?"
+		
 		File folder= new File(chooser.getSelectedFile().getAbsolutePath());
 		
 		this.fileList= folder.listFiles();
@@ -181,13 +252,22 @@ public class LogUtilsRepeatingGraph {
 
 	}
 	
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * Da invocare dopo analyzeTraces(), utilizza la lista di Grafi (ognuno rappresentante un Log) per generare la distance Matrix
+	 * Il metodo utilizza la classe GraphComparator per generare la differenza tra due Grafi (due Log).
+	 * Il punteggio risultante è la Similarità in percentuale, poi convertita in Dissimilarità o Distanza.
+	 * Viene eseguito a due a due sulla lista di Grafi.
+	 * @return la Dissimilarity/Distance Matrix
+	 * @throws RuntimeException
+	 */
 public String[][] generateDistanceMatrix() throws RuntimeException {
 	
         if(graphList.size()==0) {
         	throw new RuntimeException("invalid procedure: No Graph Found");
         }
         
-		graphSimilarity = new String[graphList.size()][graphList.size()];
+		graphDissimilarity = new String[graphList.size()][graphList.size()];
 
 		for(int i=0; i< graphList.size(); i++) {
 			Graph graph1 = graphList.get(i);
@@ -195,9 +275,9 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 			for(int j=0;j<graphList.size(); j++) {
 				Graph graph2 = graphList.get(j);
 				if(j==i)
-					graphSimilarity[i][j] = "0.0";
+					graphDissimilarity[i][j] = "0.0";
 				else {
-					if(graphSimilarity[i][j]==null) {
+					if(graphDissimilarity[i][j]==null) {
 						GraphComparator comp = new GraphComparator();
 						
 						if(scoreChange) {
@@ -214,13 +294,13 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 						comp.setLogUtilsGamma(gamma);
 						Double metrics = (comp.getMetrics(gamma))*100;
 
-						// trasformazione da SIMILARITY a DISSIMILARITY
+						// trasformazione da SIMILARITY a DISSIMILARITY/DISTANCE
 						
 						metrics = 100 - metrics;
 
 						DecimalFormat df = new DecimalFormat("#.00");
-						graphSimilarity[i][j] = String.valueOf(df.format(metrics));
-						graphSimilarity[j][i] = String.valueOf(df.format(metrics));
+						graphDissimilarity[i][j] = String.valueOf(df.format(metrics));
+						graphDissimilarity[j][i] = String.valueOf(df.format(metrics));
 					}
 				}
 			}
@@ -228,7 +308,7 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 
 		// Adding the Header with LOG files names
 
-		String [][] distanceMatrix = new String [graphSimilarity.length+1][graphSimilarity.length+1];
+		String [][] distanceMatrix = new String [graphDissimilarity.length+1][graphDissimilarity.length+1];
 
 		for(int i=0;i<distanceMatrix.length;i++) {
 			for(int j=0; j<distanceMatrix.length;j++) {
@@ -244,8 +324,8 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 							distanceMatrix[i][j] = nameOnly;
 							distanceMatrix[j][i] = nameOnly;
 						}else {
-							distanceMatrix[i][j] = graphSimilarity[i-1][j-1];
-							distanceMatrix[j][i] = graphSimilarity[j-1][i-1];
+							distanceMatrix[i][j] = graphDissimilarity[i-1][j-1];
+							distanceMatrix[j][i] = graphDissimilarity[j-1][i-1];
 						}
 					}
 				}
@@ -255,7 +335,18 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 		return distanceMatrix;
 	}
 
-
+/**
+ * @author luigi.bucchicchioAtgmail.com
+ * @param tastiera Lo Scanner, generalmente con System.in
+ * il metodo chiede se si vogliono cambiare i parametri o tenere quelli di default, considerando che nel confronto esistono:
+ * Nodi/Attività o Archi/Transizioni NotRepeating (che appaiono una volta sola per singola traccia) A
+ * Nodi/Attività o Archi/Transizioni Repeating (cha appaiono più di una volta per singola traccia) A_R
+ * i parametri sono:
+ * Gamma, ovvero il peso tra archi/transizioni e Nodi/Attività, che va da 0.0 (solo archi) a 1.0 (solo nodi)
+ * Equal score, ovvero il punteggio che si vuole dare tra Nodi e Archi Uguali tra loro (es. A con A = 1.0; A_R con A_R = 1.0)
+ * Not Equal score, ovvero il punteggio che si vuole dare tra Nodi e Archi Disuguali(presente/mancante) tra loro (es A con null = 0.0)
+ * Repeating score, ovvero il putneggio che si vuole dare quando, nel confronto, uno è Repeating e l'altro è NotRepeating (es. A con A_R = 0.5)
+ */
 public void startMenu(Scanner tastiera) {
 	
     String input = null;
@@ -314,6 +405,16 @@ public void startMenu(Scanner tastiera) {
 	
 }
 
+/**
+ * @author luigi.bucchicchioAtgmail.com
+ * L'algoritmo esegue:
+ * selectFolder() per prendere la cartella degli XES
+ * startMenu() per impostare i parametri
+ * analyzeTraces() per analizzare le tracce e salvare i rispettivi Grafi (ovvero Set di Nodi/Attività e Set di Archi/Transizioni) per ogni Log.
+ * generateDistanceMatrix() per generare una distanceMatrix con l'aiuto di GraphComparator
+ * convertToCSV() per l'output
+ * @param args
+ */
 	public static void main(String[] args) {
 
 		Locale.setDefault(Locale.US);
@@ -340,6 +441,10 @@ public void startMenu(Scanner tastiera) {
 
 	}
 	
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * Metodo per impostare L'output della console su file .TXT
+	 */
 	public void consoleOutToFile() {
 		PrintStream fileOut;
 		try {
@@ -358,74 +463,149 @@ public void startMenu(Scanner tastiera) {
 		this.outputFileName = outputFileName;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @return the array of XES files
+	 */
 	public File[] getFileList() {
 		return fileList;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @param fileList the list of XES files, expecting a File[] 
+	 */
 	public void setFileList(File[] fileList) {
 		this.fileList = fileList;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @return true is the score is custom, false to defaults
+	 */
 	public boolean isScoreChange() {
 		return scoreChange;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @param scoreChange set True if the score is Custom, false to defaults
+	 */
 	public void setScoreChange(boolean scoreChange) {
 		this.scoreChange = scoreChange;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @return the score used comparing two edges both repeating or both notRepeating (A_>B with A_>B) def. 1.0
+	 */
 	public double getEdgeEqualScore() {
 		return edgeEqualScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @param edgeEqualScore the score used comparing two edges both repeating or both notRepeating (A_>B with A_>B) def. 1.0
+	 */
 	public void setEdgeEqualScore(double edgeEqualScore) {
 		this.edgeEqualScore = edgeEqualScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @return the score used comparing two edges, one repeating and one notRepeating (A_>B,R with A_>B) def. 0.5
+	 */
 	public double getEdgeSemiScore() {
 		return edgeSemiScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @param edgeSemiScore the score used comparing two edges, one repeating and one notRepeating (A_>B,R with A_>B) def. 0.5
+	 */
 	public void setEdgeSemiScore(double edgeSemiScore) {
 		this.edgeSemiScore = edgeSemiScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @return the score used comparing two edges, one existing with one not existing (A_>B with null) def 0.0
+	 */
 	public double getEdgeNotEqualScore() {
 		return edgeNotEqualScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @param edgeNotEqualScore the score used comparing two edges, one existing with one not existing (A_>B with null) def 0.0
+	 */
 	public void setEdgeNotEqualScore(double edgeNotEqualScore) {
 		this.edgeNotEqualScore = edgeNotEqualScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * the score used comparing two nodes, both reapeating or both notRepeating (es. A with A) def. 1.0
+	 * @return the nodeEqualScore()
+	 */
 	public double getNodeEqualScore() {
 		return nodeEqualScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * @param nodeEqualScore the score used comparing two nodes, both reapeating or both notRepeating (es. A with A) def. 1.0
+	 */
 	public void setNodeEqualScore(double nodeEqualScore) {
 		this.nodeEqualScore = nodeEqualScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * the score used comparing two nodes, one repeating and one notRepeating (es. A with A_R) def. 0.5
+	 * @return the node SemiScore 
+	 */
 	public double getNodeSemiScore() {
 		return nodeSemiScore;
 	}
-
+	
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @param nodeSemiScore the score used comparing two nodes, one repeating and one notRepeating (es. A with A_R) def. 0.5
+	 */
 	public void setNodeSemiScore(double nodeSemiScore) {
 		this.nodeSemiScore = nodeSemiScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com 
+	 * the score used comparing two nodes, one existing and one not existing (es. A with null) def. 0.0
+	 * @return the node notEqualsScore 
+	 */
 	public double getNodeNotEqualScore() {
 		return nodeNotEqualScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @param nodeNotEqualScore the score used comparing two nodes, one existing and one not existing (es. A with null) def. 0.0
+	 */
 	public void setNodeNotEqualScore(double nodeNotEqualScore) {
 		this.nodeNotEqualScore = nodeNotEqualScore;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @return the gamma value, should be between 0.0 and 1.0
+	 */
 	public double getGamma() {
 		return gamma;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @param gamma between 0.0 and 1.0, representing the weigth between the Edges/Transitions (0.0 edges only) and the Nodes/Activities (1.0 nodes only) 
+	 */
 	public void setGamma(double gamma) {
 		this.gamma = gamma;
 	}
@@ -438,26 +618,52 @@ public void startMenu(Scanner tastiera) {
 		LogUtilsRepeatingGraph.startingTime = startingTime;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @return a List of Graphs, each generated from a XES file.
+	 */
 	public List<Graph> getGraphList() {
 		return graphList;
 	}
 
-	public String[][] getGraphSimilarity() {
-		return graphSimilarity;
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @return the Dissimilarity Matrix, in String[][] format.
+	 */
+	public String[][] getGraphDissimilarity() {
+		return graphDissimilarity;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @return the integer array representing the number of traces for each xes file
+	 */
 	public int[] getTraceNum() {
 		return traceNum;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @return the double array representing the average trace length for each xes file
+	 */
 	public double[] getAvgTraceLen() {
 		return avgTraceLen;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * Average Trace Length for each XES file.
+	 * @param avgTraceLen in the setup, Expecting (new double[x]) where x is the number of XES files. Require an already defined double[x] otherwise
+	 */
 	public void setAvgTraceLen(double[] avgTraceLen) {
 		this.avgTraceLen = avgTraceLen;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * Number of Traces for each XES file.
+	 * @param traceNum in the setup, Expecting (new int[x]) where x is the number of XES files. Require an already defined int[x] otherwise
+	 */
 	public void setTraceNum(int[] traceNum) {
 		this.traceNum = traceNum;
 	}

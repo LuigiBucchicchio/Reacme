@@ -7,7 +7,11 @@ import java.util.List;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
-
+/**
+ * Class that compares two LogGraph using their Node and Edges List (or Activity and Transition list)
+ * @author luigi.bucchicchioAtgmail.com
+ *
+ */
 public class GraphComparator {
 	private double logUtilsGamma=(double)0.5;
 

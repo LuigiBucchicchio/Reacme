@@ -1,5 +1,9 @@
 package grafo;
-
+/**
+ * Support class to store OPTIONAL infos avout the traces
+ * @author luigi.bucchicchioAtgmail.com
+ *
+ */
 public class TraceRepeatingEdgeInfo implements Comparable<TraceRepeatingEdgeInfo>{
 		
 		private final String traceId;

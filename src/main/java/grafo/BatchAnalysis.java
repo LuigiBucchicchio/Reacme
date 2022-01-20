@@ -10,6 +10,11 @@ import java.util.Locale;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+/**
+ * Class for LogUtilsRepeatingGraph multiple iterations
+ * @author luigi.bucchicchioAtgmail.com
+ *
+ */
 public class BatchAnalysis {
 	public static boolean nested=false;
 	public static File[] folderList;
@@ -17,9 +22,22 @@ public class BatchAnalysis {
 	
 	public static File[] fileList;
 
-	
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * Analisi di XES files in cartella o in cartella di cartelle.
+	 * Ritorna un CSV rappresentante una Distance Matrix per ogni variazione di parametro in Batch
+	 * Il parametro che varia è il RepeatingScore, ovvero il punteggio che si dà ad un arco/transizione o ad un nodo/attività che è discordante nella ripetizione fra due log (uno Repeating e l'altro NotRepeating)
+	 * Di default, "RepeatingIncr" incrementa di 0.5 (facendo 0.0;0.5;1.0) ma può essere impostato anche diversamente, es. 0.10 (facendo 0.0;0.10;0.20...)
+	 * Gamma invece cambia in modo discreto 0.0;0.5;1.0 e deve essere modificato Hard-Coded.
+	 * Il succo è che vengono effettuate multipli richiami ad "iteration()" avendo cura di impostare bene la lista dei file XES ed i parametri
+	 * @param args
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public static void main(String[] args) throws IOException,InterruptedException {
 		System.console();
+		
+		//Cartella o cartella di cartelle?
 		
 		int n = JOptionPane.showConfirmDialog(null, "Nested Folder?","Folder Option",JOptionPane.YES_NO_OPTION);
 		if(n==JOptionPane.YES_OPTION)
@@ -32,14 +50,15 @@ public class BatchAnalysis {
 			nestedFolderStartup();
 		}
 
+		// Qui il RepeatingIncr
 		double repeatingIncr=(double) 0.5;
 		double repeatingEdge=0.0;
 		double repeatingNode=0.0;
 
-		//solo nodi
+		//solo nodi/attività
 		double gamma=1.0;
 		
-		// scenari E-commerce, neutro, Maggioli
+		// scenari Repeating 0 ; 0.5 ; 1
 		for(repeatingNode= (double)0.0;repeatingNode<=(double) 1.0;repeatingNode=repeatingNode+repeatingIncr) {
 			if(!nested)
 			iteration(gamma,repeatingEdge,repeatingNode);
@@ -54,10 +73,10 @@ public class BatchAnalysis {
 		//reset
 		repeatingNode=(double) 0.0;
 
-		//solo archi
+		//solo archi/transizioni
 		gamma=0.0;
 
-		// scenari E-commerce, neutro, Maggioli
+		// scenari Repeating 0 ; 0.5 ; 1
 		for(repeatingEdge=(double) 0.0;repeatingEdge<=(double) 1.0;repeatingEdge=repeatingEdge+repeatingIncr) {
 			if(!nested)
 			iteration(gamma, repeatingEdge, repeatingNode);
@@ -75,7 +94,7 @@ public class BatchAnalysis {
 		//50-50
 		gamma=0.5;
 
-		// scenari (E-commerce, neutro, Maggioli) Archi <-X-> (E-commerce, neutro, Maggioli) Nodi
+		// scenari combo: (0 ; 0.5; 1) Nodi/Attività <-X-> (0 ; 0.5; 1) Transizioni/Archi
 		for(repeatingNode = (double)0.0;repeatingNode<=(double)1.0;repeatingNode=repeatingNode+repeatingIncr) {
 			for(repeatingEdge=(double)0.0;repeatingEdge<=(double)1.0; repeatingEdge=repeatingEdge+repeatingIncr) {
 				if(!nested)
@@ -88,10 +107,22 @@ public class BatchAnalysis {
 				}
 			}
 		}
+		
+		//quando esce fuori lui, abbiamo fatto. Ci manca un "Arrivederci!" di cortesia
 		JOptionPane.showMessageDialog(null,"END");
 
 	}
 
+
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * Segue circa il MAIN di logUtilsRepeatingGraph, rappresentando una singola iterazione per configurazione di parametri.
+	 * Da notare i passi base dell'algoritmo:
+	 * listaFile(XES), settaggio parametri, analyzeTraces(), generateDistanceMatrix(), convertToCSV()
+	 * @param a Valore di Gamma tra 0.0 e 1.0, rappresentando il peso tra Archi/Transizioni(0 max) e Nodi/Attività(1 max)
+	 * @param b Punteggio tra un Nodo/Attività Repeating e lo stesso nodo NotRepeating (es. 1.0 Uguali; 0.0 Diversi;) 
+	 * @param c Punteggio tra un Arco/Transizone Repeating e lo stesso arco NotRepeating (es. 1.0 Uguali; 0.0 Diversi)
+	 */
 	private static void iteration(double a, double b, double c) {
 		LogUtilsRepeatingGraph log=new LogUtilsRepeatingGraph();
 		log.setFileList(fileList);
@@ -99,12 +130,15 @@ public class BatchAnalysis {
 		log.setTraceNum(new int[x]);
 		log.setAvgTraceLen(new double[x]);
 		log.setScoreChange(true);
+		//gamma
 		log.setGamma(a);
 		log.setNodeEqualScore((double)1.0);
 		log.setNodeNotEqualScore((double)0.0);
+		//semiscore o RepeatingScore nodi/attività
 		log.setNodeSemiScore(c);
 		log.setEdgeEqualScore((double)1.0);
 		log.setEdgeNotEqualScore((double)0.0);
+		//semiscore o RepeatingScore archi/transizioni
 		log.setEdgeSemiScore(b);
 		log.analyzeTraces();
 		String[][] distanceMatrix = log.generateDistanceMatrix();
@@ -113,7 +147,12 @@ public class BatchAnalysis {
 		log=null;
 	}
 
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * crea lista file (aspettandosi una lista di file XES)
+	 */
 	private static void startup() {
+		
 		Locale.setDefault(Locale.US);
 		System.out.println("Log evaluation - ");
 		JFileChooser chooser = new JFileChooser(".");
@@ -128,7 +167,12 @@ public class BatchAnalysis {
 		
 	}
 	
+	/**
+	 * @author luigi.bucchicchioAtgmail.com
+	 * crea lista di liste file (aspettandosi una cartella con cartelle di file XES)
+	 */
 	private static void nestedFolderStartup() {
+		
 		Locale.setDefault(Locale.US);
 		System.out.println("Log evaluation - ");
 		JFileChooser chooser = new JFileChooser(".");

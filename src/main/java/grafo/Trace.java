@@ -1,7 +1,11 @@
 package grafo;
 
 import java.util.List;
-
+/**
+ * Support Class to store relevant infos about the traces
+ * @author luigi.bucchicchioAtgmail.com
+ *
+ */
 public class Trace implements Comparable<Trace>{
 	
 	private List<String> activitySequence;

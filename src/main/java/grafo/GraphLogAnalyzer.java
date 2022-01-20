@@ -16,6 +16,11 @@ import org.graphstream.stream.file.FileSinkImages.LayoutPolicy;
 import org.graphstream.stream.file.FileSinkImages.OutputType;
 import org.graphstream.stream.file.images.Resolutions;
 
+/**
+ * Class that analyze the XES file, creating a Graph that represents it, using a set of Nodes(Activities) and Edges(Transitions)
+ * @author luigi.bucchicchioAtgmail.com
+ *
+ */
 public class GraphLogAnalyzer {	
 	private static int graphNumber = 0;
 	private List<Trace> traceSet = new ArrayList<Trace> ();

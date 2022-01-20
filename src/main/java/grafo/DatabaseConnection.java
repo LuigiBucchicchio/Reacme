@@ -13,7 +13,11 @@ import java.util.Properties;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
-
+/**
+ * AdHoc class. Requires AdHoc db.
+ * @author Luigi
+ *
+ */
 public class DatabaseConnection {
 	private Connection connection = null;
 	private LogUtilsRepeatingGraph utils = null;
