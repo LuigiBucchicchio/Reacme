@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.Set;
 
 import javax.swing.JFileChooser;
 
@@ -17,7 +20,9 @@ import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
 
 import com.opencsv.CSVWriter;
 
@@ -269,6 +274,33 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
         if(graphList.size()==0) {
         	throw new RuntimeException("invalid procedure: No Graph Found");
         }
+        int nodesUniCardinality;
+    	int edgesUniCardinality;
+    	
+    	Set<String> edgeUniSet = new HashSet<String>();
+    	Set<String> nodeUniSet = new HashSet<String>();
+    	
+    	for(int c=0;c< graphList.size();c++) {
+    		Graph g = graphList.get(c);
+    		Iterator<Node> nodeIt = g.nodes().iterator();
+    		while(nodeIt.hasNext()) {
+    			Node n = nodeIt.next();
+    			if(!nodeUniSet.contains(n.getId()))
+    				nodeUniSet.add(n.getId());
+    		}
+    		Iterator<Edge> edgeIt = g.edges().iterator();
+    		while(edgeIt.hasNext()) {
+    			Edge e = edgeIt.next();
+    			if(!edgeUniSet.contains(e.getId()))
+    				edgeUniSet.add(e.getId());
+    		}
+    	}
+    	
+    	nodesUniCardinality = nodeUniSet.size();
+    	edgesUniCardinality = edgeUniSet.size();
+    	
+    	
+    	
         
 		graphDissimilarity = new String[graphList.size()][graphList.size()];
 
@@ -291,6 +323,9 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 						comp.setNodeNotEqualScore(nodeNotEqualScore);
 						comp.setNodeSemiScore(nodeSemiScore);
 						}
+						
+						comp.setNodesUniCardinality(nodesUniCardinality);
+						comp.setEdgesUniCardinality(edgesUniCardinality);
 						
 						comp.setGraph1(graph1);
 						comp.setGraph2(graph2);

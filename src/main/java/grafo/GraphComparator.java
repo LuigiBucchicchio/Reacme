@@ -13,6 +13,8 @@ import org.graphstream.graph.Node;
  *
  */
 public class GraphComparator {
+	private int nodesUniCardinality;
+	private int edgesUniCardinality;
 	private double logUtilsGamma=(double)0.5;
 
 	//scores
@@ -252,8 +254,10 @@ public class GraphComparator {
 		NodeCompare();
 		EdgeCompare();
 		
-		double totalNodeScore = ((gamma)*this.nodeScore)/getSizeNodeSuperSet() ;
-		double totalEdgeScore = ((negativeGamma)*this.edgeScore)/getSizeEdgeSuperSet() ;
+		//double totalNodeScore = ((gamma)*this.nodeScore)/getSizeNodeSuperSet() ;
+		double totalNodeScore = ((gamma)*this.nodeScore)/this.nodesUniCardinality;
+		//double totalEdgeScore = ((negativeGamma)*this.edgeScore)/getSizeEdgeSuperSet() ;
+		double totalEdgeScore = ((negativeGamma)*this.edgeScore)/this.edgesUniCardinality;
 		
 		return totalNodeScore + totalEdgeScore;
 	}
@@ -312,6 +316,22 @@ public class GraphComparator {
 
 	public void setLogUtilsGamma(double logUtilsGamma) {
 		this.logUtilsGamma = logUtilsGamma;
+	}
+
+	public int getNodesUniCardinality() {
+		return nodesUniCardinality;
+	}
+
+	public void setNodesUniCardinality(int nodesUniCardinality) {
+		this.nodesUniCardinality = nodesUniCardinality;
+	}
+
+	public int getEdgesUniCardinality() {
+		return edgesUniCardinality;
+	}
+
+	public void setEdgesUniCardinality(int edgesUniCardinality) {
+		this.edgesUniCardinality = edgesUniCardinality;
 	}
 	
 }
