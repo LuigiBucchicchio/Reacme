@@ -654,6 +654,15 @@ public void startMenu(Scanner tastiera) {
 	public List<Graph> getGraphList() {
 		return graphList;
 	}
+	
+	/**
+	 * Set della Lista dei grafi (se già computata)
+	 * @author luigi.bucchicchioAtgmail.com
+	 * @param graphList, List of type Graph
+	 */
+	public void setGraphList(List<Graph> graphList) {
+		this.graphList = graphList;
+	}
 
 	/**
 	 * DissimilarityMatrix (versione non formattata e non completa della distance matrix)
