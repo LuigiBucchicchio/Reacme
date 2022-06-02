@@ -152,12 +152,23 @@ public class GraphComparator {
 					if(string1.equals(string2)) {
 						nodeScore = nodeScore + nodeEqualScore;
 					}else {
-						if(string1.charAt(0)== 'R' && string2.charAt(0) != 'R')
+						//R_A A
+						if(string1.length()>1&&string2.length()==1) {
 							nodeScore = nodeScore + nodeSemiScore;
-						else if(string2.charAt(0) == 'R' && string1.charAt(0) != 'R')
+						//A R_A
+						}else if(string2.length()>1&&string1.length()==1) {
 							nodeScore = nodeScore + nodeSemiScore;
-						else
+						//R_something something
+						}else if(string2.charAt(1)=='_'&&string1.charAt(1) != '_') {
+							nodeScore = nodeScore + nodeSemiScore;					
+						//something R_something
+						}else if(string1.charAt(1)=='_'&&string2.charAt(1) != '_') {
+							nodeScore = nodeScore + nodeSemiScore;
+						}else{
+							System.out.println(string1 +" "+string2);
 							throw new IllegalArgumentException();
+						}
+							
 					}
 				}
 			}

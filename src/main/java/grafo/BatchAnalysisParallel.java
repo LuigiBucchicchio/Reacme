@@ -98,6 +98,8 @@ public class BatchAnalysisParallel {
 		long minutes = (repTime / 1000) / 60;
 		long seconds = (repTime / 1000) % 60;
 		JOptionPane.showMessageDialog(null,"finished in: "+minutes+" min and "+seconds+" sec");
+		
+		
 
 	}
 
