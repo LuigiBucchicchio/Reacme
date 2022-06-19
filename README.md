@@ -8,7 +8,7 @@ before running the algorithm check these:
 
 In the main directory, execute the command "java -jar ReACMe.jar" through any CLI. (windows' prompt or powershell is ok)
 
-In the run, are asked you some parameters representing scores. You may leave them by default.
+In the run, some parameters are asked, representing scores. You may leave them by default.
 
 If everything went right, you have in the output folder:
 
