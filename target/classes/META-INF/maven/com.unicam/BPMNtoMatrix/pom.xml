@@ -6,10 +6,10 @@
 	<artifactId>BPMNtoMatrix</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
-     <maven.compiler.source>1.8</maven.compiler.source>
-     <maven.compiler.target>1.8</maven.compiler.target>
-    </properties>
-	
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
 	<dependencies>
 
 		<dependency>
@@ -24,39 +24,39 @@
 		</dependency>
 
 
-<dependency>
-    <groupId>javax.xml.bind</groupId>
-    <artifactId>jaxb-api</artifactId>
-    <version>2.3.1</version>
-</dependency>
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.3.1</version>
+		</dependency>
 
 		<dependency>
-	<groupId>com.opencsv</groupId>
-	<artifactId>opencsv</artifactId>
-	<version>4.1</version>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.6</version>
 		</dependency>
-<dependency>
-    <groupId>org.graphstream</groupId>
-    <artifactId>gs-core</artifactId>
-    <version>2.0</version>
-</dependency>
+		<dependency>
+			<groupId>org.graphstream</groupId>
+			<artifactId>gs-core</artifactId>
+			<version>2.0</version>
+		</dependency>
 
-<dependency>
-        <groupId>org.graphstream</groupId>
-        <artifactId>gs-algo</artifactId>
-        <version>2.0</version>
-    </dependency>
-    
-    <dependency>
-        <groupId>org.graphstream</groupId>
-        <artifactId>gs-ui-swing</artifactId>
-        <version>2.0</version>
-    </dependency>
+		<dependency>
+			<groupId>org.graphstream</groupId>
+			<artifactId>gs-algo</artifactId>
+			<version>2.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.graphstream</groupId>
+			<artifactId>gs-ui-swing</artifactId>
+			<version>2.0</version>
+		</dependency>
 
 	</dependencies>
 </project>

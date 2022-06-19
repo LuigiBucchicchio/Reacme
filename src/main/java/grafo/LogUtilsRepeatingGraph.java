@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
@@ -18,6 +19,7 @@ import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
 
 import com.opencsv.CSVWriter;
 
@@ -63,12 +65,12 @@ public class LogUtilsRepeatingGraph {
 	//scores
 	private boolean scoreChange=false;
 	private double edgeEqualScore= (double) 1.0;
-	private double edgeSemiScore= (double) 0.5;
+	private double edgeSemiScore= (double) 0.0;
 	private double edgeNotEqualScore = (double) 0.0;
 	private double nodeEqualScore= (double) 1.0;
-	private double nodeSemiScore= (double) 1.0;
+	private double nodeSemiScore= (double) 0.0;
 	private double nodeNotEqualScore = (double) 0.0;
-	private double gamma = (double)0.5;
+	private double gamma = (double)0.0;
 	
 	static double startingTime;
 	
@@ -120,7 +122,9 @@ public class LogUtilsRepeatingGraph {
 
 					for (XEvent xevent : xTrace) {
 
+						
 						String activity=xevent.getAttributes().get("concept:name").toString();
+//						activity = activity.substring(0, 3);
 
 						traceLine.append(activity);
 
@@ -296,7 +300,6 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 						comp.setGraph2(graph2);
 						comp.setLogUtilsGamma(gamma);
 						Double metrics = (comp.getMetrics(gamma))*100;
-
 						// trasformazione da SIMILARITY a DISSIMILARITY/DISTANCE
 						
 						metrics = 100 - metrics;
@@ -353,10 +356,10 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 public void startMenu(Scanner tastiera) {
 	
     String input = null;
-    double a=(double)0.5;
+    double a=(double)0.0;
     
     do {
-    	System.out.println("Change the gamma value (default 0.5)? <<y>> or <<n>>");
+    	System.out.println("Change the gamma value (default "+gamma+")? <<y>> or <<n>>");
     	input = tastiera.nextLine();
     }while((!input.equals("y")) && (!input.equals("n")));
 
@@ -375,32 +378,32 @@ public void startMenu(Scanner tastiera) {
         this.scoreChange=true;
         
         double newScore= (double)1.0;
-        System.out.println("\u2705 "+"Insert the Node_Equal score (default 1.0)"+" \u2705");
+        System.out.println("\u2705 "+"Insert the Node_Equal score (default "+nodeEqualScore+")"+" \u2705");
     	newScore = Double.valueOf(tastiera.nextLine());
         this.nodeEqualScore =newScore;
         
         newScore= (double)0.0;
-        System.out.println("\u2705 "+"Insert the Node_NOT_Equal score (default 0.0)"+" \u2705");
+        System.out.println("\u2705 "+"Insert the Node_NOT_Equal score (default "+nodeNotEqualScore+")"+" \u2705");
     	newScore = Double.valueOf(tastiera.nextLine());
     	this.nodeNotEqualScore =newScore;
         
-    	newScore= (double)1.0;
-        System.out.println("\u2705 "+"Insert the Node_Semi_Equal score (default 1.0)"+" \u2705");
+    	newScore= (double)0.0;
+        System.out.println("\u2705 "+"Insert the Node_Semi_Equal score (default "+nodeSemiScore+")"+" \u2705");
     	newScore = Double.valueOf(tastiera.nextLine());
     	this.nodeSemiScore =newScore;
     	
     	newScore= (double)1.0;
-        System.out.println("\u2705 "+"Insert the Edge_Equal score (default 1.0)"+" \u2705");
+        System.out.println("\u2705 "+"Insert the Edge_Equal score (default "+edgeEqualScore+")"+" \u2705");
     	newScore = Double.valueOf(tastiera.nextLine());
     	this.edgeEqualScore =newScore;
     	
     	newScore= (double)0.0;
-        System.out.println("\u2705 "+"Insert the Edge_NOT_Equal score (default 0.0)"+" \u2705");
+        System.out.println("\u2705 "+"Insert the Edge_NOT_Equal score (default "+edgeNotEqualScore+")"+" \u2705");
     	newScore = Double.valueOf(tastiera.nextLine());
     	this.edgeNotEqualScore =newScore;
     	
-    	newScore= (double)0.5;
-        System.out.println("\u2705 "+"Insert the Edge_Semi_Equal score (default 0.5)"+" \u2705");
+    	newScore= (double)0.0;
+        System.out.println("\u2705 "+"Insert the Edge_Semi_Equal score (default "+edgeSemiScore+")"+" \u2705");
     	newScore = Double.valueOf(tastiera.nextLine());
     	this.edgeSemiScore =newScore;
     }
@@ -439,9 +442,9 @@ public void startMenu(Scanner tastiera) {
 		System.out.println("Execution Time:" + String.valueOf(System.currentTimeMillis()-startingTime));
 		
 		System.out.println("Use the file "+log.getOutputFileName()+" in output directory to make clusters\n");
-//		
-//		DatabaseConnection dc= new DatabaseConnection(log);
-//		dc.insertAll("B", "Modelli validazione con varianti, non perturbati");
+//	
+		
+		log.generateNodeListReport("CUSTOM");
 
 	}
 	
@@ -711,6 +714,58 @@ public void startMenu(Scanner tastiera) {
 		this.traceNum = traceNum;
 	}
 	
+	public void generateNodeListReport(String etichettaDataset) {
+		
+		List<String[]> rows = new ArrayList<String[]>();
+		
+		List<Graph> graphsList = getGraphList();
+		Iterator<Graph> graphIterator = graphsList.iterator();
+		int index = 0;
+		while(graphIterator.hasNext()) {
+			Graph g = graphIterator.next();
+			Iterator<Node> nodeList = g.nodes().iterator();
+			while(nodeList.hasNext()) {
+				Node n = nodeList.next();
+				String id = n.getId();
+				String repeatingString = (String) n.getAttribute("ui.label");
+				boolean isRepeating = false;
+				if(repeatingString.length()>1){
+					if(repeatingString.charAt(1)=='_')
+						isRepeating=true;
+				}
+				String logName = getFileList()[index].getName();
+				String[] row = new String[6];
+				row[0] = id;
+				row[1] = logName;
+				row[2] = etichettaDataset;
+				row[3] = "null";
+				if(isRepeating)
+					row[4] = String.valueOf(1);
+				else
+					row[4] = String.valueOf(0);
+				row[5] = "null";
+				rows.add(row);
+			}
+			index++;
+		}
+		
+		try {
+			//cartellina
+			File f = new File("output");
+			f.mkdir();
+			File csvFile = new File(f.getAbsolutePath()+"\\"+"select_all_from_attivita.csv");
+			//scriba, pls
+			CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
+
+			for (String[] array : rows) {
+				writer.writeNext(array);
+			}
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
+		
+	}
 	
 	
 }

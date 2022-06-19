@@ -13,14 +13,14 @@ import org.graphstream.graph.Node;
  *
  */
 public class GraphComparator {
-	private double logUtilsGamma=(double)0.5;
+	private double logUtilsGamma=(double)0.0;
 
 	//scores
 	private double edgeEqualScore= (double) 1.0;
-	private double edgeSemiScore= (double) 0.5;
+	private double edgeSemiScore= (double) 0.0;
 	private double edgeNotEqualScore = (double) 0.0;
 	private double nodeEqualScore= (double) 1.0;
-	private double nodeSemiScore= (double) 1.0;
+	private double nodeSemiScore= (double) 0.0;
 	private double nodeNotEqualScore = (double) 0.0;
 	
 	public double nodeScore = (double) 0.00;
@@ -158,10 +158,10 @@ public class GraphComparator {
 						//A R_A
 						}else if(string2.length()>1&&string1.length()==1) {
 							nodeScore = nodeScore + nodeSemiScore;
-						//R_something something
+						//something R_something
 						}else if(string2.charAt(1)=='_'&&string1.charAt(1) != '_') {
 							nodeScore = nodeScore + nodeSemiScore;					
-						//something R_something
+						//R_something something
 						}else if(string1.charAt(1)=='_'&&string2.charAt(1) != '_') {
 							nodeScore = nodeScore + nodeSemiScore;
 						}else{
@@ -263,8 +263,17 @@ public class GraphComparator {
 		NodeCompare();
 		EdgeCompare();
 		
-		double totalNodeScore = ((gamma)*this.nodeScore)/getSizeNodeSuperSet() ;
-		double totalEdgeScore = ((negativeGamma)*this.edgeScore)/getSizeEdgeSuperSet() ;
+		double totalNodeScore;
+		if(getSizeNodeSuperSet()==0)
+			totalNodeScore = (double) 0.0;
+		else
+		totalNodeScore = ((gamma)*this.nodeScore)/getSizeNodeSuperSet() ;
+		
+		double totalEdgeScore;
+		if(getSizeEdgeSuperSet()==0)
+			totalEdgeScore = (double) 0.0;
+		else
+		totalEdgeScore = ((negativeGamma)*this.edgeScore)/getSizeEdgeSuperSet() ;
 		
 		return totalNodeScore + totalEdgeScore;
 	}
