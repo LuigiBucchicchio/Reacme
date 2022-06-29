@@ -32,8 +32,59 @@ public class EnsembleRun {
 		}
 		log.setTraceNum(new int[x]);
 		log.setAvgTraceLen(new double[x]);
+		
+		if(args.length==0) {
 		Scanner tastiera = new Scanner(System.in);
 		log.startMenu(tastiera);
+		}else if(args.length==4){
+			double gamma = Double.valueOf(args[0]);
+			double nodiRepeating = Double.valueOf(args[1]);
+			double archiRepeating = Double.valueOf(args[2]);
+			int primiTreSimboli = Integer.valueOf(args[3]);
+			boolean treSimboli;
+			if(primiTreSimboli==0)
+				treSimboli=false;
+			else
+				treSimboli=true;
+			
+			log.setScoreChange(true);
+			log.setGamma(gamma);
+			log.setNodeSemiScore(nodiRepeating);
+			log.setEdgeSemiScore(archiRepeating);
+			if(treSimboli)
+			log.setTreCifre(true);
+			else
+				log.setTreCifre(false);
+			
+		}else {
+			double gamma = Double.valueOf(args[0]);
+			double nodiEqualScore = Double.valueOf(args[1]);
+			double nodiNotEqualScore = Double.valueOf(args[2]);
+			double nodiSemiEqualScore = Double.valueOf(args[3]);
+			double archiEqualScore = Double.valueOf(args[4]);
+			double archiNotEqualScore = Double.valueOf(args[5]);
+			double archiSemiScore = Double.valueOf(args[6]);
+			int primiTreSimboli = Integer.valueOf(args[7]);
+			boolean treSimboli;
+			if(primiTreSimboli==0)
+				treSimboli=false;
+			else
+				treSimboli=true;
+			
+			log.setScoreChange(true);
+			log.setGamma(gamma);
+			log.setNodeEqualScore(nodiEqualScore);
+			log.setNodeNotEqualScore(nodiNotEqualScore);
+			log.setNodeSemiScore(nodiSemiEqualScore);
+			log.setEdgeEqualScore(archiEqualScore);
+			log.setEdgeNotEqualScore(archiNotEqualScore);
+			log.setEdgeSemiScore(archiSemiScore);
+			
+			if(treSimboli)
+			log.setTreCifre(true);
+			else
+				log.setTreCifre(false);
+		}
 		log.analyzeTraces();
 		String[][] distanceMatrix = log.generateDistanceMatrix();
 		log.convertToCSV(distanceMatrix);

@@ -72,6 +72,9 @@ public class LogUtilsRepeatingGraph {
 	private double nodeNotEqualScore = (double) 0.0;
 	private double gamma = (double)0.0;
 	
+	//
+	private boolean isTreCifre=false;
+	
 	static double startingTime;
 	
 	/**
@@ -124,7 +127,9 @@ public class LogUtilsRepeatingGraph {
 
 						
 						String activity=xevent.getAttributes().get("concept:name").toString();
-//						activity = activity.substring(0, 3);
+						
+						if(isTreCifre)
+						activity = activity.substring(0, 3);
 
 						traceLine.append(activity);
 
@@ -765,6 +770,14 @@ public void startMenu(Scanner tastiera) {
 			e.printStackTrace();
 		} 
 		
+	}
+
+	public boolean isTreCifre() {
+		return isTreCifre;
+	}
+
+	public void setTreCifre(boolean isTreCifre) {
+		this.isTreCifre = isTreCifre;
 	}
 	
 	
