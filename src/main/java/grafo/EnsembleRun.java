@@ -2,14 +2,17 @@ package grafo;
 
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Scanner;
 
 import com.opencsv.CSVReader;
@@ -93,7 +96,11 @@ public class EnsembleRun {
 		int cores = Runtime.getRuntime().availableProcessors();
 
 		System.out.println("System cores: "+cores);
-		File script = new File("main.py");
+		File script = new File(
+				Optional
+				.ofNullable(System.getenv("CLUSTERING_SCRIPT_PATH"))
+				.orElse("main.py")
+				);
 		String scriptPath = script.getAbsolutePath();
 		scriptPath = scriptPath.replace('\\','/');
 		File currentDirectory = new File("");
@@ -269,8 +276,47 @@ public class EnsembleRun {
 				String winner1name = outputList.get(1).getName();
 				outputList.get(1).renameTo(new File(parentDir1+"\\"+winner1name));
 			}
-
 			System.out.println("Done");
+		}
+			log.generateNodeListReport("CUSTOM");
+			prepareForHeatMap();
+	}
+	
+	
+	public static void prepareForHeatMap() throws IOException {
+		File dir = new File("");
+		String dirPath = dir.getAbsolutePath();
+		dir = new File(dirPath);
+		File outputDirectory = new File(dir+"\\output");
+		if(outputDirectory.isDirectory()) {
+			File[] fileList = outputDirectory.listFiles();
+			for(int i=0; i<fileList.length;i++) {
+				File one = fileList[i];
+				if(one.getName().contains("clustering")) {
+					File newClusteringFile = new File(outputDirectory+"\\preparedLabelsForHeatmap.csv");
+					FileWriter fw = new FileWriter(newClusteringFile);
+					BufferedWriter bw = new BufferedWriter(fw);
+					Scanner s = new Scanner(one);
+					String line = null;
+					while(s.hasNextLine()){
+						line = s.nextLine();
+						if(!line.contains(".")) {
+							bw.newLine();
+							line = line.replace("['", "");
+							line = line.replace("]", "");
+							line = line.replace("[", "");
+							line = line.replace("' ", ",");
+							bw.write(line);
+						}else if(line.contains("DistanceGraph")) {
+							bw.write("NomeLog,ClusterId");
+						}else {
+							//skip
+						}
+						}
+					s.close();
+					bw.close();
+				}
+			}
 		}
 	}
 

@@ -1,5 +1,8 @@
 package grafo;
 
+//import java.awt.Dimension;
+//import java.awt.event.ActionEvent;
+//import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -12,7 +15,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
+//import javax.swing.JButton;
 import javax.swing.JFileChooser;
+//import javax.swing.JFrame;
+//import javax.swing.JOptionPane;
+//import javax.swing.JPanel;
+//import javax.swing.JSlider;
+//import javax.swing.event.ChangeEvent;
+//import javax.swing.event.ChangeListener;
 
 import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XEvent;
@@ -25,10 +35,10 @@ import com.opencsv.CSVWriter;
 
 /**
  * Classe che permette di analizzare e confrontare files di Log (XES). <br>
- * Vengono creati dei Grafi riconducibili ad una lista di Nodi/attività e una lista di Archi/Transizioni <br>
- * Nodi e Archi possono essere Repeating o Not Repeating (ripetendosi più di una volta per traccia o meno) <br>
+ * Vengono creati dei Grafi riconducibili ad una lista di Nodi/attivitï¿½ e una lista di Archi/Transizioni <br>
+ * Nodi e Archi possono essere Repeating o Not Repeating (ripetendosi piï¿½ di una volta per traccia o meno) <br>
  * Ogni grafo rappresenta un Log, riassumendo l'analisi di tutte le tracce. <br>
- * I grafi generati vengono così comparati e come output viene data una DistanceMatrix in CSV. <br>
+ * I grafi generati vengono cosï¿½ comparati e come output viene data una DistanceMatrix in CSV. <br>
  * <br>
  * per funzionare, dopo aver creato un Oggetto di tipo LogUtilsRepeatingGraph, va eseguito il main <br>
  * oppure vanno eseguiti i seguenti passaggi: <br>
@@ -77,6 +87,15 @@ public class LogUtilsRepeatingGraph {
 	
 	static double startingTime;
 	
+//	static int slider=0;
+//	
+//	static int slider1=0;
+//	static int slider2=0;
+//	static int slider3=0;
+//	static int slider4=0;
+//	static int slider5=0;
+//	static int slider6=0;
+//	
 	/**
 	 * XES parser
 	 * @param filePath 
@@ -93,12 +112,12 @@ public class LogUtilsRepeatingGraph {
 	 * <br>
 	 * le tracce vengono lette in due diversi modi:<br>
 	 * come TraceLine, in una singola stringa: es. "ABBBABBABABA" "a1a2a3a4a5a1a2a3" "activity1activity2activity3"<br>
-	 * come Sequenza di attività in una lista: es. "[ A,B,B,B,.....] [a1,a2,a3...] [activity1,activity2....]<br>
+	 * come Sequenza di attivitï¿½ in una lista: es. "[ A,B,B,B,.....] [a1,a2,a3...] [activity1,activity2....]<br>
 	 * sebbene si utilizzi prettamente il secondo metodo di lettura, alcuni algortimi sulle stringhe possono richiedere la TraceLine<br>
 	 * <br>
 	 * Info aggiuntive come il log di provenienza e l'id della traccia vengono salvate anche se non vengono usate<br>
 	 * Tutte le info vengono salvate mediante una classe di supporto, Trace, che confluisce in una traceList che viene passata all'analyzer<br>
-	 * l'analyzer eseguirà LogAnalyze() creando un Graph, ottenibile con getGraph() e aggiunto in una lista di Grafi.<br>
+	 * l'analyzer eseguirï¿½ LogAnalyze() creando un Graph, ottenibile con getGraph() e aggiunto in una lista di Grafi.<br>
 	 * @author luigi.bucchicchioAtgmail.com
 	 * 
 	 */
@@ -182,7 +201,7 @@ public class LogUtilsRepeatingGraph {
 
 	/**
 	 * In output, il CSV con il nome formattato come segue:<br>
-	 * DistanceGraph_nomeCartella_numeroFilesLogs_gamma_parametriNodiOAttività_parametriArchiOTransizioni.csv
+	 * DistanceGraph_nomeCartella_numeroFilesLogs_gamma_parametriNodiOAttivitï¿½_parametriArchiOTransizioni.csv
 	 * @author luigi.bucchicchioAtgmail.com
 	 * @param data La distanceMatrix
 	 * 
@@ -266,7 +285,7 @@ public class LogUtilsRepeatingGraph {
 	/**
 	 *  Da invocare dopo analyzeTraces(), utilizza la lista di Grafi (ognuno rappresentante un Log) per generare la distance Matrix. Click per dettagli <br>
 	 * Il metodo utilizza la classe GraphComparator per generare la differenza tra due Grafi (due Log).<br>
-	 * Il punteggio risultante è la Similarità in percentuale, poi convertita in Dissimilarità o Distanza.<br>
+	 * Il punteggio risultante ï¿½ la Similaritï¿½ in percentuale, poi convertita in Dissimilaritï¿½ o Distanza.<br>
 	 * Viene eseguito a due a due sulla lista di Grafi.<br>
 	 * @author luigi.bucchicchioAtgmail.com
 	 * @return la Dissimilarity/Distance Matrix
@@ -348,13 +367,13 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 
 /**
  * il metodo chiede se si vogliono cambiare i parametri o tenere quelli di default, considerando che nel confronto esistono: Click per dettagli <br>
- * Nodi/Attività o Archi/Transizioni NotRepeating (che appaiono una volta sola per singola traccia) A <br>
- * Nodi/Attività o Archi/Transizioni Repeating (cha appaiono più di una volta per singola traccia) A_R <br>
+ * Nodi/Attivitï¿½ o Archi/Transizioni NotRepeating (che appaiono una volta sola per singola traccia) A <br>
+ * Nodi/Attivitï¿½ o Archi/Transizioni Repeating (cha appaiono piï¿½ di una volta per singola traccia) A_R <br>
  * i parametri sono: <br>
- * Gamma, ovvero il peso tra archi/transizioni e Nodi/Attività, che va da 0.0 (solo archi) a 1.0 (solo nodi) <br>
+ * Gamma, ovvero il peso tra archi/transizioni e Nodi/Attivitï¿½, che va da 0.0 (solo archi) a 1.0 (solo nodi) <br>
  * Equal score, ovvero il punteggio che si vuole dare tra Nodi e Archi Uguali tra loro (es. A con A = 1.0; A_R con A_R = 1.0) <br>
  * Not Equal score, ovvero il punteggio che si vuole dare tra Nodi e Archi Disuguali(presente/mancante) tra loro (es A con null = 0.0) <br>
- * Repeating score, ovvero il putneggio che si vuole dare quando, nel confronto, uno è Repeating e l'altro è NotRepeating (es. A con A_R = 0.5) <br>
+ * Repeating score, ovvero il putneggio che si vuole dare quando, nel confronto, uno ï¿½ Repeating e l'altro ï¿½ NotRepeating (es. A con A_R = 0.5) <br>
  * @author luigi.bucchicchioAtgmail.com
  * @param tastiera Lo Scanner, generalmente con System.in
  * */
@@ -416,18 +435,237 @@ public void startMenu(Scanner tastiera) {
 	
 }
 
+//private class Change implements ChangeListener {
+//	private int sliderNumber=0;
+//	
+//	private Change(int x) {
+//		this.sliderNumber=x;
+//	}
+//	
+//	private Change() {
+//	}
+//	
+//	public void stateChanged(ChangeEvent e) {
+//	    JSlider source = (JSlider)e.getSource();
+//	    if (!source.getValueIsAdjusting()) {
+//	        int x = (int)source.getValue();
+//	        if(sliderNumber==0)
+//	        LogUtilsRepeatingGraph.slider=x;
+//	        else if (sliderNumber==1)
+//	        LogUtilsRepeatingGraph.slider1=x;
+//	        else if (sliderNumber==2)
+//		        LogUtilsRepeatingGraph.slider2=x;
+//	        else if (sliderNumber==3)
+//		        LogUtilsRepeatingGraph.slider3=x;
+//	        else if (sliderNumber==4)
+//		        LogUtilsRepeatingGraph.slider4=x;
+//	        else if (sliderNumber==5)
+//		        LogUtilsRepeatingGraph.slider5=x;
+//	        else if (sliderNumber==6)
+//		        LogUtilsRepeatingGraph.slider6=x;
+//	    }
+//	}
+//}
+//
+//private class ButtonListener implements ActionListener {
+//	
+//	JPanel panel;
+//	JFrame frame;
+//	
+//	private ButtonListener(JPanel panel,JFrame frame){
+//		this.panel=panel;
+//		this.frame=frame;
+//	}
+//
+//	@Override
+//	public void actionPerformed(ActionEvent e) {
+//		panel = new JPanel();
+//		panel.setVisible(false);
+//		frame.setVisible(false);
+//	}
+//}
+
+//public void visualStartMenu() throws InterruptedException {
+//
+//	JPanel panel = new JPanel();
+//	JFrame frame = new JFrame();
+//	panel.setPreferredSize(new Dimension(500,500));
+//	panel.setVisible(false);
+//	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//	frame.add(panel);
+//	frame.pack();
+//	frame.setLocationRelativeTo(null);
+//	frame.setVisible(false);
+//
+//	String[] options = {"Yes","No"};
+//	int n = JOptionPane.showOptionDialog(frame,
+//			"Would you like to change the gamma value?",
+//			"Gamma Value",
+//			JOptionPane.YES_NO_OPTION,
+//			JOptionPane.QUESTION_MESSAGE,
+//			null,     //do not use a custom Icon
+//			options,  //the titles of buttons
+//			options[0]); //default button title
+//
+//	if(n==JOptionPane.YES_OPTION) {
+//		panel.setVisible(true);
+//		frame.setVisible(true);
+//
+//		final int GAMMA_MIN = 0;
+//		final int GAMMA_MAX = 100;
+//		final int GAMMA_INIT = 0;
+//		JSlider gammaSlider = new JSlider(JSlider.HORIZONTAL,
+//				GAMMA_MIN, GAMMA_MAX, GAMMA_INIT);
+//		gammaSlider.addChangeListener(new Change());
+//		//Turn on labels at major tick marks.
+//		gammaSlider.setMajorTickSpacing(10);
+//		gammaSlider.setMinorTickSpacing(10);
+//		gammaSlider.setPaintTicks(true);
+//		gammaSlider.setPaintLabels(true);
+//		gammaSlider.setPreferredSize(new Dimension(200,150));
+//		panel.add(gammaSlider);
+//		JButton button = new JButton("OK");
+//		button.setVisible(true);
+//		panel.add(button);
+//		frame.pack();
+//		button.addActionListener(new ButtonListener(panel,frame));
+//
+//		while(frame.isVisible()) {
+//			Thread.sleep(1000);
+//		}
+//
+//		this.gamma = slider/100;
+//	}
+//
+//	frame.dispose();
+//	panel = new JPanel();
+//	frame = new JFrame();
+//	panel.setPreferredSize(new Dimension(500,800));
+//	panel.setVisible(false);
+//	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//	frame.add(panel);
+//	frame.pack();
+//	frame.setLocationRelativeTo(null);
+//	frame.setVisible(false);
+//
+//	n = JOptionPane.showOptionDialog(frame,
+//			"Would you like to change the scores?",
+//			"Change scores",
+//			JOptionPane.YES_NO_OPTION,
+//			JOptionPane.QUESTION_MESSAGE,
+//			null,     //do not use a custom Icon
+//			options,  //the titles of buttons
+//			options[0]); //default button title
+//
+//	if(n==JOptionPane.YES_OPTION) {
+//		this.scoreChange=true;
+//
+//		panel.setPreferredSize(new Dimension(500,800));
+//		panel.setVisible(true);
+//		frame.setVisible(true);
+//
+//		final int SCORE_MIN = 0;
+//		final int SCORE_MAX = 100;
+//		final int SCORE_INIT = 0;
+//		JSlider n_eqSlider = new JSlider(JSlider.HORIZONTAL,
+//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
+//		n_eqSlider.addChangeListener(new Change(1));
+//		//Turn on labels at major tick marks.
+//		n_eqSlider.setMajorTickSpacing(10);
+//		n_eqSlider.setMinorTickSpacing(10);
+//		n_eqSlider.setPaintTicks(true);
+//		n_eqSlider.setPaintLabels(true);
+//		n_eqSlider.setPreferredSize(new Dimension(200,50));
+//		JSlider n_neqSlider = new JSlider(JSlider.HORIZONTAL,
+//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
+//		n_neqSlider.addChangeListener(new Change(2));
+//		//Turn on labels at major tick marks.
+//		n_neqSlider.setMajorTickSpacing(10);
+//		n_neqSlider.setMinorTickSpacing(10);
+//		n_neqSlider.setPaintTicks(true);
+//		n_neqSlider.setPaintLabels(true);
+//		n_neqSlider.setPreferredSize(new Dimension(200,50));
+//		JSlider n_seqSlider = new JSlider(JSlider.HORIZONTAL,
+//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
+//		n_seqSlider.addChangeListener(new Change(3));
+//		//Turn on labels at major tick marks.
+//		n_seqSlider.setMajorTickSpacing(10);
+//		n_seqSlider.setMinorTickSpacing(10);
+//		n_seqSlider.setPaintTicks(true);
+//		n_seqSlider.setPaintLabels(true);
+//		n_seqSlider.setPreferredSize(new Dimension(200,50));
+//		JSlider e_eqSlider = new JSlider(JSlider.HORIZONTAL,
+//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
+//		e_eqSlider.addChangeListener(new Change(4));
+//		//Turn on labels at major tick marks.
+//		e_eqSlider.setMajorTickSpacing(10);
+//		e_eqSlider.setMinorTickSpacing(10);
+//		e_eqSlider.setPaintTicks(true);
+//		e_eqSlider.setPaintLabels(true);
+//		e_eqSlider.setPreferredSize(new Dimension(200,50));
+//		JSlider e_neqSlider = new JSlider(JSlider.HORIZONTAL,
+//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
+//		e_neqSlider.addChangeListener(new Change(5));
+//		//Turn on labels at major tick marks.
+//		e_neqSlider.setMajorTickSpacing(10);
+//		e_neqSlider.setMinorTickSpacing(10);
+//		e_neqSlider.setPaintTicks(true);
+//		e_neqSlider.setPaintLabels(true);
+//		e_neqSlider.setPreferredSize(new Dimension(200,50));
+//		JSlider e_seqSlider = new JSlider(JSlider.HORIZONTAL,
+//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
+//		e_seqSlider.addChangeListener(new Change(6));
+//		//Turn on labels at major tick marks.
+//		e_seqSlider.setMajorTickSpacing(10);
+//		e_seqSlider.setMinorTickSpacing(10);
+//		e_seqSlider.setPaintTicks(true);
+//		e_seqSlider.setPaintLabels(true);
+//		e_seqSlider.setPreferredSize(new Dimension(200,50));
+//
+//		JButton button = new JButton("OK");
+//		button.addActionListener(new ButtonListener(panel,frame));
+//
+//
+//		panel.add(n_eqSlider);
+//		panel.add(n_neqSlider);
+//		panel.add(n_seqSlider);
+//		panel.add(e_eqSlider);
+//		panel.add(e_neqSlider);
+//		panel.add(e_seqSlider);
+//		panel.add(button);
+//		panel.setVisible(true);
+//		frame.pack();
+//		button.setVisible(true);
+//
+//		while(frame.isVisible()) {
+//			Thread.sleep(1000);
+//		}
+//
+//		this.nodeEqualScore = slider1/100;
+//		this.nodeNotEqualScore = slider2/100;
+//		this.nodeSemiScore= slider3/100;
+//		this.edgeEqualScore = slider4/100;
+//		this.edgeNotEqualScore = slider5/100;
+//		this.edgeSemiScore = slider6/100;
+//	}
+//
+//	frame.dispose();
+//
+//}
+
 /**
  * L'algoritmo esegue: Clicca per dettagli <br>
  * selectFolder() per prendere la cartella degli XES <br>
  * startMenu() per impostare i parametri <br>
- * analyzeTraces() per analizzare le tracce e salvare i rispettivi Grafi (ovvero Set di Nodi/Attività e Set di Archi/Transizioni) per ogni Log. <br>
+ * analyzeTraces() per analizzare le tracce e salvare i rispettivi Grafi (ovvero Set di Nodi/Attivitï¿½ e Set di Archi/Transizioni) per ogni Log. <br>
  * generateDistanceMatrix() per generare una distanceMatrix con l'aiuto di GraphComparator <br>
  * convertToCSV() per l'output <br>
  * @author luigi.bucchicchioAtgmail.com
  * 
  * @param args
+ * @throws InterruptedException 
  */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 
 		Locale.setDefault(Locale.US);
 		System.out.println("Log evaluation - ");
@@ -435,6 +673,7 @@ public void startMenu(Scanner tastiera) {
 		log.selectFolder();
 		Scanner tastiera = new Scanner(System.in);
 		log.startMenu(tastiera);
+//		log.visualStartMenu();
 		
 		//log.consoleOutToFile();
 		
@@ -664,7 +903,7 @@ public void startMenu(Scanner tastiera) {
 	}
 	
 	/**
-	 * Set della Lista dei grafi (se già computata)
+	 * Set della Lista dei grafi (se giï¿½ computata)
 	 * @author luigi.bucchicchioAtgmail.com
 	 * @param graphList, List of type Graph
 	 */
@@ -763,6 +1002,7 @@ public void startMenu(Scanner tastiera) {
 			CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
 
 			for (String[] array : rows) {
+				
 				writer.writeNext(array);
 			}
 			writer.close();
