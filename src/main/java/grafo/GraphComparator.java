@@ -3,16 +3,22 @@ package grafo;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
 /**
  * Class that compares two LogGraph using their Node and Edges List (or Activity and Transition list)
  * @author luigi.bucchicchioAtgmail.com
  *
  */
 public class GraphComparator {
+	
+	private List<Node> datasetNodeSet = null;
+	private List<Edge> datasetEdgeSet = null;
+	
 	private double logUtilsGamma=(double)0.0;
 
 	//scores
@@ -121,19 +127,29 @@ public class GraphComparator {
 	}
 
 	public void NodeCompare() {
-
-		Iterator<Node> nIt = nodeSuperSet.iterator();
+		Iterator<Node> nIt;
+		
+		if(this.datasetNodeSet!=null)
+			nIt = datasetNodeSet.iterator();
+		else nIt = nodeSuperSet.iterator();
+		
 		while(nIt.hasNext()) {
 			Node n= nIt.next();
 
 			if(graph1.getNode(n.getId())==null) {
-
+				
+				if(graph2.getNode(n.getId())==null)
+					nodeScore = nodeScore + nodeEqualScore;
+				else
 				nodeScore=nodeScore + nodeNotEqualScore;
 				
 			}else {
 
 				if(graph2.getNode(n.getId())==null) {
-
+					
+					if(graph1.getNode(n.getId())==null)
+						nodeScore = nodeScore + nodeEqualScore;
+					else
 					nodeScore=nodeScore + nodeNotEqualScore;
 					
 				}else {
@@ -177,14 +193,22 @@ public class GraphComparator {
 
 	public void EdgeCompare() {
 		
-		Iterator<Edge> eIt = edgeSuperSet.iterator();
+		Iterator<Edge> eIt;
+		
+		if(this.datasetEdgeSet!=null)
+			eIt = datasetEdgeSet.iterator();
+		else
+			eIt = edgeSuperSet.iterator();
 		while(eIt.hasNext()) {
 			Edge e = eIt.next();
 			
 			if(graph1.getEdge(e.getId())==null) {
 				
 				if(logUtilsGamma!=(double)0.0) {
-					edgeScore= edgeScore + edgeNotEqualScore;
+					if(graph2.getEdge(e.getId())==null)
+						edgeScore = edgeScore+edgeEqualScore;
+					else
+						edgeScore=edgeScore+edgeNotEqualScore;
 				}else {
 					
 					//caso particolare
@@ -195,6 +219,10 @@ public class GraphComparator {
 //					if(same&&graph1.getNode(firstActivity)!=null) {
 //						edgeScore=edgeScore+edgeSemiScore;
 //					}else {
+					
+					if(graph2.getEdge(e.getId())==null)
+						edgeScore = edgeScore+edgeEqualScore;
+					else
 						edgeScore=edgeScore+edgeNotEqualScore;
 //					}
 				}
@@ -204,7 +232,10 @@ public class GraphComparator {
 				if( graph2.getEdge(e.getId())==null) {
 					
 					if(logUtilsGamma!=(double)0.0) {
-						edgeScore = edgeScore + edgeNotEqualScore;
+						if(graph1.getEdge(e.getId())==null)
+							edgeScore = edgeScore + edgeEqualScore;
+						else
+							edgeScore=edgeScore+edgeNotEqualScore;
 					}else {
 						
 						//caso particolare
@@ -215,6 +246,9 @@ public class GraphComparator {
 //						if(same&&graph2.getNode(firstActivity)!=null) {
 //							edgeScore=edgeScore+edgeSemiScore;
 //						}else {
+						if(graph1.getEdge(e.getId())==null)
+							edgeScore = edgeScore + edgeEqualScore;
+						else
 							edgeScore=edgeScore+edgeNotEqualScore;
 //						}
 					}
@@ -263,17 +297,27 @@ public class GraphComparator {
 		NodeCompare();
 		EdgeCompare();
 		
+		int nodeDenom;
+		if(this.datasetNodeSet!=null)
+			nodeDenom=this.datasetNodeSet.size();
+		else nodeDenom=getSizeNodeSuperSet();
+			
+		int edgeDenom;
+		if(this.datasetEdgeSet!=null)
+			edgeDenom=this.datasetEdgeSet.size();
+		else edgeDenom=getSizeEdgeSuperSet();
+		
 		double totalNodeScore;
-		if(getSizeNodeSuperSet()==0)
+		if(nodeDenom==0)
 			totalNodeScore = (double) 0.0;
 		else
-		totalNodeScore = ((gamma)*this.nodeScore)/getSizeNodeSuperSet() ;
+		totalNodeScore = ((gamma)*this.nodeScore)/nodeDenom;
 		
 		double totalEdgeScore;
-		if(getSizeEdgeSuperSet()==0)
+		if(edgeDenom==0)
 			totalEdgeScore = (double) 0.0;
 		else
-		totalEdgeScore = ((negativeGamma)*this.edgeScore)/getSizeEdgeSuperSet() ;
+		totalEdgeScore = ((negativeGamma)*this.edgeScore)/edgeDenom;
 		
 		return totalNodeScore + totalEdgeScore;
 	}
@@ -332,6 +376,40 @@ public class GraphComparator {
 
 	public void setLogUtilsGamma(double logUtilsGamma) {
 		this.logUtilsGamma = logUtilsGamma;
+	}
+
+	public List<Node> getDatasetNodeSet() {
+		return datasetNodeSet;
+	}
+
+	public void setDatasetNodeSet(List<Node> datasetNodeSet) {
+		this.datasetNodeSet = datasetNodeSet;
+	}
+
+	public List<Edge> getDatasetEdgeSet() {
+		return datasetEdgeSet;
+	}
+
+	public void setDatasetEdgeSet(List<Edge> datasetEdgeSet) {
+		this.datasetEdgeSet = datasetEdgeSet;
+	}
+	
+	public void setDatasetNodeSetAndEdgeSet(Set<String> datasetNodeIdSet,List<Edge> datasetEdgeSet) {
+		if(this.datasetNodeSet==null)
+			this.datasetNodeSet= new ArrayList<Node>();
+		
+		Iterator<String> nodeIt = datasetNodeIdSet.iterator();
+		Graph graph = new MultiGraph("def");
+		while(nodeIt.hasNext()) {
+			Node n = graph.addNode(nodeIt.next());
+			this.datasetNodeSet.add(n);
+		}
+		
+		if(this.datasetEdgeSet==null)
+			this.datasetEdgeSet = new ArrayList<Edge>();
+		
+		setDatasetEdgeSet(datasetEdgeSet);
+		
 	}
 	
 }

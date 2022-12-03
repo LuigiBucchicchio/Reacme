@@ -10,10 +10,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.Set;
 
 //import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -28,6 +30,7 @@ import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 
@@ -64,6 +67,11 @@ import com.opencsv.CSVWriter;
  * 
  */
 public class LogUtilsRepeatingGraph {
+public static boolean changeMetric = false;
+	
+	private Set<String> datasetNodeIdSet = new HashSet<String>();
+	private Set<String> datasetEdgeIdSet = new HashSet<String>();
+	private List<Edge> datasetEdgeSet = new ArrayList<Edge>();
 
 	private File[] fileList;
 	private int[] traceNum;
@@ -168,7 +176,25 @@ public class LogUtilsRepeatingGraph {
 				GraphLogAnalyzer analyzer = new GraphLogAnalyzer();
 				analyzer.setTraceSet(traceList);
 				analyzer.LogAnalyze();
-				graphList.add(analyzer.getGraph());
+				Graph result = analyzer.getGraph();
+				graphList.add(result);
+				
+			    Iterator<Node> nodeIt = result.nodes().iterator();
+			    Iterator<Edge> edgeIt = result.edges().iterator();
+			    while(nodeIt.hasNext()) {
+			    	Node n = nodeIt.next();
+			    	String nId = n.getId();
+			    	datasetNodeIdSet.add(nId);
+			    }
+			    while(edgeIt.hasNext()) {
+			    	Edge e = edgeIt.next();
+			    	String eId = e.getId();
+			    	if(!datasetEdgeIdSet.contains(eId)) {
+			    	datasetEdgeIdSet.add(eId);
+			    	datasetEdgeSet.add(e);
+			    	}
+			    }
+				
 				
 				// Useful Info, can be used in combo with "consoleOutToFile()" (see main comment)
 				
@@ -318,6 +344,10 @@ public String[][] generateDistanceMatrix() throws RuntimeException {
 						comp.setNodeEqualScore(nodeEqualScore);
 						comp.setNodeNotEqualScore(nodeNotEqualScore);
 						comp.setNodeSemiScore(nodeSemiScore);
+						}
+						
+						if(changeMetric) {
+							comp.setDatasetNodeSetAndEdgeSet(datasetNodeIdSet,datasetEdgeSet);
 						}
 						
 						comp.setGraph1(graph1);
@@ -1018,6 +1048,14 @@ public void startMenu(Scanner tastiera) {
 
 	public void setTreCifre(boolean isTreCifre) {
 		this.isTreCifre = isTreCifre;
+	}
+
+	public List<Edge> getDatasetEdgeSet() {
+		return datasetEdgeSet;
+	}
+
+	public void setDatasetEdgeSet(List<Edge> datasetEdgeSet) {
+		this.datasetEdgeSet = datasetEdgeSet;
 	}
 	
 	
