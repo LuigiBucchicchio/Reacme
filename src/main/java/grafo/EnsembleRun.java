@@ -207,7 +207,7 @@ public class EnsembleRun {
 					double score = Double.valueOf(row[1]);
 					if(score>max) {
 						max = score;
-						winner = new File(nextOutputFile.getAbsolutePath());
+						winner = nextOutputFile;
 					}
 					reader.close();
 				}
