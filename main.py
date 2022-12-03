@@ -90,7 +90,11 @@ for file in os.listdir(folder):
    Labels_definitive = np.column_stack((labels, lst))
    Etichette = Labels_definitive[Labels_definitive[:, 1].argsort()]
    etichetteList.append(Etichette)
-
+   
+with open("medoids.txt", "x") as f:
+   for var in range(len(centers)):
+      f.write(str(labels[centers[var]]) +','+ str(var) +'\n')
+      
 with open(""+str(arg1)+str(arg2)+"clustering.txt", "x") as f:
    for var in range(len(silhouetteList)):
       f.write(str(os.listdir(folder)[var]) + '\n')

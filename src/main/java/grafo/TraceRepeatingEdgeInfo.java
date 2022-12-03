@@ -1,6 +1,6 @@
 package grafo;
 /**
- * Support class to store OPTIONAL infos avout the traces
+ * Support class to store OPTIONAL infos about the traces
  * @author luigi.bucchicchioAtgmail.com
  *
  */

@@ -189,6 +189,11 @@ public class EnsembleRun {
 				if(nextFile.getName().contains("clustering") || nextFile.getName().contains("smallOut"))
 					outputList.add(nextFile);
 			}
+			
+			if(outputList.size()==0){
+				System.out.println("error in running the script occurred");
+				System.exit(99);
+			}
 
 			Iterator<File> outputFileIterator = outputList.iterator();
 			double max = (double) 0.0;
@@ -202,12 +207,13 @@ public class EnsembleRun {
 					double score = Double.valueOf(row[1]);
 					if(score>max) {
 						max = score;
-						winner = nextOutputFile;
+						winner = new File(nextOutputFile.getAbsolutePath());
 					}
 					reader.close();
 				}
 			}
-
+			
+			
 			File[] winners = new File[2];
 			int winnersIndex = 0;
 			String winnerName = winner.getName();
