@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Support Class to store relevant infos about the traces
  *
- * @author luigi.bucchicchioAtgmail.com
+ * @author Luigi Bucchicchio, Donici Ionut Bogdan, Riccardo Ceccarani, Roberta Nerla
  */
 public class Trace implements Comparable<Trace> {
 

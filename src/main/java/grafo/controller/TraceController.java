@@ -1,10 +1,9 @@
 package grafo.controller;
 
-import grafo.Trace;
-import org.graphstream.graph.Node;
-
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class TraceController {
 

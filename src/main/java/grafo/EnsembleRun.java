@@ -1,6 +1,7 @@
 package grafo;
 
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import grafo.controller.TraceController;
 
 import java.io.*;
@@ -9,7 +10,7 @@ import java.util.stream.Stream;
 
 public class EnsembleRun {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, CsvValidationException {
 
         long startingTime = System.currentTimeMillis();
         Locale.setDefault(Locale.US);
