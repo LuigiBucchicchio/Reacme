@@ -1,84 +1,153 @@
-package grafo;
+package grafo.view;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import grafo.LogUtilsRepeatingGraph;
 import grafo.controller.TraceController;
 
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.stage.DirectoryChooser;
+
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class EnsembleRun {
+import static grafo.EnsembleRun.prepareForHeatMap;
 
-    public static void main(String[] args) throws IOException, InterruptedException, CsvValidationException {
+public class ViewController implements Initializable {
 
-        long startingTime = System.currentTimeMillis();
-        Locale.setDefault(Locale.US);
-        System.out.println("Log evaluation start");
-        LogUtilsRepeatingGraph log = new LogUtilsRepeatingGraph();
-        File f = new File("input");
+    @FXML
+    private Label _xesFiles;
+    @FXML
+    private TextField _gammaID;
+    @FXML
+    private ChoiceBox<String> _changeScoreID = new ChoiceBox<>();
 
-        // TODO: Rimuovere
-        f.mkdir();
+    @FXML
+    private TextField _nodeEqualScoreID;
+    @FXML
+    private TextField _nodeNotEqualScoreID;
+    @FXML
+    private TextField _nodeSemiEqualScoreID;
+    @FXML
+    private TextField _edgeEqualScoreID;
+    @FXML
+    private TextField _edgeNotEqualScoreID;
+    @FXML
+    private TextField _edgeSemiEqualScoreID;
 
-        log.setFileList(f.listFiles());
-        int numberOfFiles = log.getFileList().length;
-        if (numberOfFiles <= 2) {
-            System.out.println("Not enough Input XES Files found");
-            System.exit(99);
-        }
-        log.setTraceNum(new int[numberOfFiles]);
-        log.setAvgTraceLen(new double[numberOfFiles]);
+    private File _xesDirectory = new File("");
+    private boolean validInputs = false;
 
-        if (args.length == 0) {
-            Scanner tastiera = new Scanner(System.in);
-            log.startMenu(tastiera);
-        } else if (args.length == 4) {
-            double gamma = Double.parseDouble(args[0]);
-            double nodiRepeating = Double.parseDouble(args[1]);
-            double archiRepeating = Double.parseDouble(args[2]);
-            int primiTreSimboli = Integer.parseInt(args[3]);
-            boolean treSimboli;
-            treSimboli = primiTreSimboli != 0;
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        _changeScoreID.getItems().addAll("No", "Yes");
+        _changeScoreID.setValue("No");
+    }
 
-            log.setScoreChange(true);
-            log.setGamma(gamma);
-            log.setNodeSemiScore(nodiRepeating);
-            log.setEdgeSemiScore(archiRepeating);
-            log.setTreCifre(treSimboli);
+    public void loadDirectory() {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select XES Files Directory");
+        directoryChooser.setInitialDirectory(new java.io.File("."));
+        _xesDirectory = directoryChooser.showDialog(null);
+        _xesFiles.setText(_xesDirectory.listFiles().length == 0 ? "No files found" : _xesDirectory.getAbsolutePath());
+    }
 
+    public void changeScore() {
+        if (_changeScoreID.getValue().equals("Yes")) {
+            _nodeEqualScoreID.setDisable(false);
+            _nodeNotEqualScoreID.setDisable(false);
+            _nodeSemiEqualScoreID.setDisable(false);
+            _edgeEqualScoreID.setDisable(false);
+            _edgeNotEqualScoreID.setDisable(false);
+            _edgeSemiEqualScoreID.setDisable(false);
         } else {
-            double gamma = Double.parseDouble(args[0]);
-            double nodiEqualScore = Double.parseDouble(args[1]);
-            double nodiNotEqualScore = Double.parseDouble(args[2]);
-            double nodiSemiEqualScore = Double.parseDouble(args[3]);
-            double archiEqualScore = Double.parseDouble(args[4]);
-            double archiNotEqualScore = Double.parseDouble(args[5]);
-            double archiSemiScore = Double.parseDouble(args[6]);
-            int primiTreSimboli = Integer.parseInt(args[7]);
-            boolean treSimboli;
-            treSimboli = primiTreSimboli != 0;
-
-            log.setScoreChange(true);
-            log.setGamma(gamma);
-            log.setNodeEqualScore(nodiEqualScore);
-            log.setNodeNotEqualScore(nodiNotEqualScore);
-            log.setNodeSemiScore(nodiSemiEqualScore);
-            log.setEdgeEqualScore(archiEqualScore);
-            log.setEdgeNotEqualScore(archiNotEqualScore);
-            log.setEdgeSemiScore(archiSemiScore);
-
-            log.setTreCifre(treSimboli);
+            _nodeEqualScoreID.setDisable(true);
+            _nodeNotEqualScoreID.setDisable(true);
+            _nodeSemiEqualScoreID.setDisable(true);
+            _edgeEqualScoreID.setDisable(true);
+            _edgeNotEqualScoreID.setDisable(true);
+            _edgeSemiEqualScoreID.setDisable(true);
         }
+    }
 
-        log.analyzeTraces();
+    public void runMining() throws IOException, InterruptedException, CsvValidationException {
+        // Verificare che il numero di file sia almeno 2
+        // Verificare che tutti i campi siano compilati prima di avviare il process mining
+        validateValue(_gammaID);
+        if (_changeScoreID.getValue().equals("Yes")) {
+            validateValue(_nodeEqualScoreID);
+            validateValue(_nodeNotEqualScoreID);
+            validateValue(_nodeSemiEqualScoreID);
+            validateValue(_edgeEqualScoreID);
+            validateValue(_edgeNotEqualScoreID);
+            validateValue(_edgeSemiEqualScoreID);
+        }
+        if (validInputs) {
+            startMining();
+        } else {
+            System.out.println("Invalid inputs");
+        }
+    }
+
+    /**
+     * Questo metodo permette di validare l'input di gamma ed eventualmente degli score.
+     * Un campo è valido se è un numero reale compreso tra 0 e 1.
+     *
+     * @param textField il campo da validare
+     */
+    private void validateValue(TextField textField) {
+        if (textField.getText().matches("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$")) {
+            if (Double.parseDouble(textField.getText()) < 0 || Double.parseDouble(textField.getText()) > 1) {
+                textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
+                validInputs = false;
+            } else {
+                textField.setStyle("-fx-border-color: transparent ; -fx-border-width: 0px ;");
+                validInputs = true;
+            }
+        } else {
+            textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
+            validInputs = false;
+        }
+    }
+
+
+    /**
+     * Questo metodo permette di avviare il process mining.
+     * Si può dire che è la copia del metodo main di EnsembleRun
+     */
+    private void startMining() throws IOException, InterruptedException, CsvValidationException {
+        long startingTime = System.currentTimeMillis();
+        LogUtilsRepeatingGraph logUtils = new LogUtilsRepeatingGraph();
+        int size = _xesDirectory.listFiles().length;
+        logUtils.setFileList(_xesDirectory.listFiles());
+        logUtils.setTraceNum(new int[size]);
+        logUtils.setAvgTraceLen(new double[size]);
+        logUtils.setScoreChange(true);
+        logUtils.setGamma(Double.parseDouble(_gammaID.getText()));
+        logUtils.setNodeEqualScore(Double.parseDouble(_nodeEqualScoreID.getText()));
+        logUtils.setNodeNotEqualScore(Double.parseDouble(_nodeNotEqualScoreID.getText()));
+        logUtils.setNodeSemiScore(Double.parseDouble(_nodeSemiEqualScoreID.getText()));
+        logUtils.setEdgeEqualScore(Double.parseDouble(_edgeEqualScoreID.getText()));
+        logUtils.setEdgeNotEqualScore(Double.parseDouble(_edgeNotEqualScoreID.getText()));
+        logUtils.setEdgeSemiScore(Double.parseDouble(_edgeSemiEqualScoreID.getText()));
+        logUtils.setTreCifre(false);
+
+        logUtils.analyzeTraces();
+        String[][] distanceMatrix = logUtils.generateDistanceMatrix();
+
         // Metodo aggiunto per vedere il dizionario di n-gram
         Stream.of(TraceController.dictionary).forEach(System.out::println);
 
-        String[][] distanceMatrix = log.generateDistanceMatrix();
-        log.convertToCSV(distanceMatrix);
+        logUtils.convertToCSV(distanceMatrix);
         System.out.println("Evaluation Terminated - Execution Time:" + (System.currentTimeMillis() - startingTime));
 
+        // Multi-threading
         int cores = Runtime.getRuntime().availableProcessors();
 
         System.out.println("System cores: " + cores);
@@ -93,15 +162,17 @@ public class EnsembleRun {
         String currentPath = currentDirectory.getAbsolutePath();
         currentPath = currentPath.replace('\\', '/');
 
-        if (cores > 1 && ((log.getFileList().length - 2) > (cores * 2))) {
+        System.out.println("Script path: " + scriptPath);
+        System.out.println("Current path: " + currentPath);
+        if (cores > 1 && ((logUtils.getFileList().length - 2) > (cores * 2))) {
             System.out.println("Clustering Algorithm start");
 
             ProcessBuilder[] builders = new ProcessBuilder[cores];
             Process[] processes = new Process[cores];
 
-            int subpart = (int) Math.floor((double) log.getFileList().length / cores);
+            int subpart = (int) Math.floor((double) logUtils.getFileList().length / cores);
 
-            int diff = log.getFileList().length - subpart * cores;
+            int diff = logUtils.getFileList().length - subpart * cores;
 
             int last = 0;
 
@@ -122,6 +193,7 @@ public class EnsembleRun {
 
             for (int i = 0; i < cores; i++) {
                 processes[i] = builders[i].start();
+                System.out.println("Process " + i + " started");
             }
 
             System.out.print("waiting for " + processes.length + " processes to end");
@@ -129,10 +201,8 @@ public class EnsembleRun {
                 processes[i].waitFor();
                 System.out.print(".");
             }
-            System.out.println();
-            System.out.println("Clustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
+            System.out.println("\nClustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
             System.out.println("Incoming Results on output directory...");
-            Thread.sleep(1000);
 
             File dir = new File("");
             String dirPath = dir.getAbsolutePath();
@@ -140,7 +210,7 @@ public class EnsembleRun {
 
             List<File> fileList = new ArrayList<>();
             Collections.addAll(fileList, dir.listFiles());
-
+            fileList.forEach(System.out::println);
             List<File> outputList = new ArrayList<>();
             for (File nextFile : fileList) {
                 if (nextFile.getName().contains("clustering") || nextFile.getName().contains("smallOut"))
@@ -193,7 +263,7 @@ public class EnsembleRun {
 
         } else {
             System.out.println("Clustering Algorithm start");
-            ProcessBuilder pb = new ProcessBuilder("python", scriptPath, "" + 2, "" + log.getFileList().length + "", "" + currentPath + "\\output");
+            ProcessBuilder pb = new ProcessBuilder("python", scriptPath, "" + 2, "" + logUtils.getFileList().length + "", "" + currentPath + "\\output");
             Process p = pb.start();
             p.waitFor();
             BufferedReader bfr = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -234,44 +304,7 @@ public class EnsembleRun {
 
             System.out.println("Done");
         }
-        log.generateNodeListReport("CUSTOM");
+        logUtils.generateNodeListReport("CUSTOM");
         prepareForHeatMap();
     }
-
-
-    public static void prepareForHeatMap() throws IOException {
-        File dir = new File("");
-        String dirPath = dir.getAbsolutePath();
-        dir = new File(dirPath);
-        File outputDirectory = new File(dir + "\\output");
-        if (outputDirectory.isDirectory()) {
-            File[] fileList = outputDirectory.listFiles();
-            for (File one : fileList) {
-                if (one.getName().contains("clustering")) {
-                    File newClusteringFile = new File(outputDirectory + "\\preparedLabelsForHeatmap.csv");
-                    FileWriter fw = new FileWriter(newClusteringFile);
-                    BufferedWriter bw = new BufferedWriter(fw);
-                    Scanner s = new Scanner(one);
-                    String line;
-                    while (s.hasNextLine()) {
-                        line = s.nextLine();
-                        if (!line.contains(".")) {
-                            bw.newLine();
-                            line = line.replace("['", "");
-                            line = line.replace("]", "");
-                            line = line.replace("[", "");
-                            line = line.replace("' ", ",");
-                            bw.write(line);
-                        } else if (line.contains("DistanceGraph")) {
-                            bw.write("NomeLog,ClusterId");
-                        }
-                        // Skip
-                    }
-                    s.close();
-                    bw.close();
-                }
-            }
-        }
-    }
-
 }

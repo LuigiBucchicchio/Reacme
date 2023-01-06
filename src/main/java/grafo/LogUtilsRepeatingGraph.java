@@ -113,7 +113,7 @@ public class LogUtilsRepeatingGraph {
         System.out.println("Starting to analyze traces");
         startingTime = System.currentTimeMillis();
 
-        int gram = Integer.parseInt(IO_Handler.requireInput("Please give me th n for grams: "));
+        int gram = Integer.parseInt(IO_Handler.requireInput("Please give me the n for grams: "));
 
         for (int i = 0; i < fileList.length; i++) {
             File file = fileList[i];
@@ -126,25 +126,17 @@ public class LogUtilsRepeatingGraph {
                 //XLog xlog=parseXES("/home/cippus/Downloads/log (5).xes");
 
                 for (XTrace xTrace : xlog) {
-
                     ArrayList<String> activitySequence = new ArrayList<String>();
-
                     StringBuffer traceLine = new StringBuffer("");
                     // activitySequence = [t11, t45, t63, t12, t113, t9]
                     // traceLine = t11t45t63t12t113t9
 
                     for (XEvent xevent : xTrace) {
-
-
                         String activity = xevent.getAttributes().get("concept:name").toString();
-
                         if (isTreCifre)
                             activity = activity.substring(0, 3);
-
                         traceLine.append(activity);
-
                         activitySequence.add(activity);
-
                     }
 
                     Trace genericTrace = new Trace();

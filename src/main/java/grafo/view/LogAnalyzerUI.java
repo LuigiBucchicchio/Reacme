@@ -1,9 +1,8 @@
 package grafo.view;
 
 import javafx.application.Application;
-import javafx.scene.Parent;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 
@@ -21,10 +20,11 @@ public class LogAnalyzerUI extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        BorderPane root = new BorderPane();
-        Scene scene = new Scene(root, 800, 600);
+        // Load the FXML file
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getResource("/views/home_v1.fxml"));
         primaryStage.setTitle("Log Analyzer");
-        primaryStage.setScene(scene);
+        primaryStage.setScene(new Scene(loader.load()));
         primaryStage.show();
     }
 }
