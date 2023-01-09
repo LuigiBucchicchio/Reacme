@@ -41,6 +41,9 @@ public class ViewController implements Initializable {
     @FXML
     private TextField _edgeSemiEqualScoreID;
 
+    @FXML
+    private TextField _nGramID;
+
     private File _xesDirectory = new File("");
     private boolean validInputs = false;
 
@@ -66,6 +69,7 @@ public class ViewController implements Initializable {
             _edgeEqualScoreID.setDisable(false);
             _edgeNotEqualScoreID.setDisable(false);
             _edgeSemiEqualScoreID.setDisable(false);
+            _nGramID.setDisable(false);
         } else {
             _nodeEqualScoreID.setDisable(true);
             _nodeNotEqualScoreID.setDisable(true);
@@ -73,22 +77,13 @@ public class ViewController implements Initializable {
             _edgeEqualScoreID.setDisable(true);
             _edgeNotEqualScoreID.setDisable(true);
             _edgeSemiEqualScoreID.setDisable(true);
+            _nGramID.setDisable(true);
         }
     }
 
     public void runMining() throws IOException, InterruptedException, CsvValidationException {
-        // Verificare che il numero di file sia almeno 2
-        // Verificare che tutti i campi siano compilati prima di avviare il process mining
-        validateValue(_gammaID);
-        if (_changeScoreID.getValue().equals("Yes")) {
-            validateValue(_nodeEqualScoreID);
-            validateValue(_nodeNotEqualScoreID);
-            validateValue(_nodeSemiEqualScoreID);
-            validateValue(_edgeEqualScoreID);
-            validateValue(_edgeNotEqualScoreID);
-            validateValue(_edgeSemiEqualScoreID);
-        }
-        if (validInputs) {
+        validInputs = checkInputValues();
+        if(validInputs){
             startMining();
         } else {
             System.out.println("Invalid inputs");
@@ -96,23 +91,58 @@ public class ViewController implements Initializable {
     }
 
     /**
+     * Questo metodo permette di controllare la validità di tutti i valori inseriti: gamma, score, ngram.
+     *
+     * @return true se tutti i valori in input sono validi.
+     */
+    private boolean checkInputValues(){
+        if (_changeScoreID.getValue().equals("Yes")) {
+            return  validateValue(_gammaID) &
+                    validateValue(_nodeEqualScoreID) &
+                    validateValue(_nodeNotEqualScoreID) &
+                    validateValue(_nodeSemiEqualScoreID) &
+                    validateValue(_edgeEqualScoreID) &
+                    validateValue(_edgeNotEqualScoreID) &
+                    validateValue(_edgeSemiEqualScoreID);
+        }
+        else {
+            return validateValue(_gammaID);
+        }
+    }
+
+    /*
+    private boolean checkInputValues(){
+        List<TextField> inputValues = new LinkedList<TextField>();
+        inputValues.add(_gammaID);
+        inputValues.add(_nodeEqualScoreID);
+        inputValues.add(_nodeNotEqualScoreID);
+        inputValues.add(_nodeSemiEqualScoreID);
+        inputValues.add(_edgeEqualScoreID);
+        inputValues.add(_edgeNotEqualScoreID);
+        inputValues.add(_edgeSemiEqualScoreID);
+        List<Boolean> check= inputValues.stream().map(this::validateValue).toList();
+        return check.stream().allMatch(b -> b);
+    }
+*/
+
+    /**
      * Questo metodo permette di validare l'input di gamma ed eventualmente degli score.
      * Un campo è valido se è un numero reale compreso tra 0 e 1.
      *
      * @param textField il campo da validare
      */
-    private void validateValue(TextField textField) {
+    private boolean validateValue(TextField textField) {
         if (textField.getText().matches("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$")) {
             if (Double.parseDouble(textField.getText()) < 0 || Double.parseDouble(textField.getText()) > 1) {
                 textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-                validInputs = false;
+                return false;
             } else {
                 textField.setStyle("-fx-border-color: transparent ; -fx-border-width: 0px ;");
-                validInputs = true;
+                return true;
             }
         } else {
             textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            validInputs = false;
+            return false;
         }
     }
 
@@ -123,26 +153,52 @@ public class ViewController implements Initializable {
      */
     private void startMining() throws IOException, InterruptedException, CsvValidationException {
         long startingTime = System.currentTimeMillis();
+        Locale.setDefault(Locale.US);
+        System.out.println("Log evaluation start");
         LogUtilsRepeatingGraph logUtils = new LogUtilsRepeatingGraph();
-        int size = _xesDirectory.listFiles().length;
+
         logUtils.setFileList(_xesDirectory.listFiles());
+        int size = _xesDirectory.listFiles().length;
+
+        if (size <= 2) {
+            System.out.println("Not enough Input XES Files found");
+            System.exit(99);
+        }
+
         logUtils.setTraceNum(new int[size]);
         logUtils.setAvgTraceLen(new double[size]);
         logUtils.setScoreChange(true);
-        logUtils.setGamma(Double.parseDouble(_gammaID.getText()));
-        logUtils.setNodeEqualScore(Double.parseDouble(_nodeEqualScoreID.getText()));
-        logUtils.setNodeNotEqualScore(Double.parseDouble(_nodeNotEqualScoreID.getText()));
-        logUtils.setNodeSemiScore(Double.parseDouble(_nodeSemiEqualScoreID.getText()));
-        logUtils.setEdgeEqualScore(Double.parseDouble(_edgeEqualScoreID.getText()));
-        logUtils.setEdgeNotEqualScore(Double.parseDouble(_edgeNotEqualScoreID.getText()));
-        logUtils.setEdgeSemiScore(Double.parseDouble(_edgeSemiEqualScoreID.getText()));
         logUtils.setTreCifre(false);
 
-        logUtils.analyzeTraces();
-        String[][] distanceMatrix = logUtils.generateDistanceMatrix();
+        double gamma = Double.valueOf(_gammaID.getText());
 
+        if (_changeScoreID.getValue().equals("Yes")){
+            double nodeEqualScoreID = Double.valueOf(_nodeEqualScoreID.getText());
+            double nodeNotEqualScoreID = Double.valueOf(_nodeNotEqualScoreID.getText());
+            double nodeSemiEqualScoreID = Double.valueOf(_nodeSemiEqualScoreID.getText());
+            double edgeEqualScoreID =  Double.valueOf(_edgeEqualScoreID.getText());
+            double edgeNotEqualScoreID = Double.valueOf(_edgeNotEqualScoreID.getText());
+            double edgeSemiEqualScoreID = Double.valueOf(_edgeSemiEqualScoreID.getText());
+            int nGramID = Integer.valueOf(_nGramID.getText());
+
+
+            logUtils.setGamma(gamma);
+            logUtils.setNodeEqualScore(nodeEqualScoreID);
+            logUtils.setNodeNotEqualScore(nodeNotEqualScoreID);
+            logUtils.setNodeSemiScore(nodeSemiEqualScoreID);
+            logUtils.setEdgeEqualScore(edgeEqualScoreID);
+            logUtils.setEdgeNotEqualScore(edgeNotEqualScoreID);
+            logUtils.setEdgeSemiScore(edgeSemiEqualScoreID);
+            logUtils.setnGram(nGramID);
+        } else {
+            logUtils.setGamma(gamma);
+        }
+
+
+        logUtils.analyzeTraces();
         // Metodo aggiunto per vedere il dizionario di n-gram
         Stream.of(TraceController.dictionary).forEach(System.out::println);
+        String[][] distanceMatrix = logUtils.generateDistanceMatrix();
 
         logUtils.convertToCSV(distanceMatrix);
         System.out.println("Evaluation Terminated - Execution Time:" + (System.currentTimeMillis() - startingTime));
@@ -162,8 +218,8 @@ public class ViewController implements Initializable {
         String currentPath = currentDirectory.getAbsolutePath();
         currentPath = currentPath.replace('\\', '/');
 
-        System.out.println("Script path: " + scriptPath);
-        System.out.println("Current path: " + currentPath);
+        //System.out.println("Script path: " + scriptPath);
+        //System.out.println("Current path: " + currentPath);
         if (cores > 1 && ((logUtils.getFileList().length - 2) > (cores * 2))) {
             System.out.println("Clustering Algorithm start");
 
@@ -210,7 +266,8 @@ public class ViewController implements Initializable {
 
             List<File> fileList = new ArrayList<>();
             Collections.addAll(fileList, dir.listFiles());
-            fileList.forEach(System.out::println);
+
+            //fileList.forEach(System.out::println);
             List<File> outputList = new ArrayList<>();
             for (File nextFile : fileList) {
                 if (nextFile.getName().contains("clustering") || nextFile.getName().contains("smallOut"))

@@ -68,6 +68,8 @@ public class LogUtilsRepeatingGraph {
     private double nodeNotEqualScore = (double) 0.0;
     private double gamma = (double) 0.0;
 
+    private int nGram = 2;
+
     //
     private boolean isTreCifre = false;
 
@@ -113,7 +115,7 @@ public class LogUtilsRepeatingGraph {
         System.out.println("Starting to analyze traces");
         startingTime = System.currentTimeMillis();
 
-        int gram = Integer.parseInt(IO_Handler.requireInput("Please give me the n for grams: "));
+        //int gram = Integer.parseInt(IO_Handler.requireInput("Please give me the n for grams: "));
 
         for (int i = 0; i < fileList.length; i++) {
             File file = fileList[i];
@@ -145,7 +147,7 @@ public class LogUtilsRepeatingGraph {
                     genericTrace.setLogId(fileList[i].getName());
                     genericTrace.setTraceId(xTrace.getAttributes().get("concept:name").toString());
                     traceList.add(genericTrace);
-                    genericTrace.setGrams(TraceController.generateGrams(gram, genericTrace.getActivitySequence()));
+                    genericTrace.setGrams(TraceController.generateGrams(nGram, genericTrace.getActivitySequence()));
                     //analyzer.setTrace(traceLine.toString());
                 }
 
@@ -898,6 +900,10 @@ public class LogUtilsRepeatingGraph {
         this.gamma = gamma;
     }
 
+    public void setnGram(int nGram) {
+        this.nGram = nGram;
+    }
+
     public double getStartingTime() {
         return startingTime;
     }
@@ -1040,6 +1046,7 @@ public class LogUtilsRepeatingGraph {
     public void setTreCifre(boolean isTreCifre) {
         this.isTreCifre = isTreCifre;
     }
+
 
 
 }
