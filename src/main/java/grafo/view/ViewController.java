@@ -4,7 +4,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import grafo.LogUtilsRepeatingGraph;
 import grafo.controller.TraceController;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -20,8 +19,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static grafo.EnsembleRun.prepareForHeatMap;
@@ -52,7 +51,7 @@ public class ViewController implements Initializable {
     private TextField _nGramID;
 
     private File _xesDirectory = new File("");
-    private File outputDir = new File("./output/");
+    private final File outputDir = new File("./output/");
     private boolean validInputs = false;
 
     @Override
@@ -89,9 +88,9 @@ public class ViewController implements Initializable {
         }
     }
 
-    private void resetOutputDir() throws IOException {
+    private void resetOutputDir() {
         try {
-            if(!isOutputDirEmpty()){
+            if (!isOutputDirEmpty()) {
                 deleteFiles();
             }
         } catch (IOException e) {
@@ -100,22 +99,24 @@ public class ViewController implements Initializable {
     }
 
     private boolean isOutputDirEmpty() throws IOException {
-        try(DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(outputDir.getPath()))) {
+        try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(outputDir.getPath()))) {
             return !dirStream.iterator().hasNext();
         }
     }
 
-    private boolean deleteFiles() throws IOException{
-        try(DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(outputDir.getPath()))) {
-            dirStream.forEach(p-> p.toFile().delete());
+    private void deleteFiles() throws IOException {
+        try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(outputDir.getPath()))) {
+            dirStream.forEach(p -> p.toFile().delete());
         }
-        return isOutputDirEmpty();
+        isOutputDirEmpty();
     }
 
     public void runMining() throws IOException, InterruptedException, CsvValidationException {
-        resetOutputDir();
-        if(!isOutputDirEmpty()){
-            deleteFiles();
+        if (outputDir.exists()) {
+            resetOutputDir();
+            if (!isOutputDirEmpty()) {
+                deleteFiles();
+            }
         }
         validInputs = checkInputValues();
         if (validInputs) {
@@ -414,7 +415,7 @@ public class ViewController implements Initializable {
     }
 
     public void closeApplication() throws IOException {
-        if(isOutputDirEmpty()){
+        if (isOutputDirEmpty()) {
             Platform.exit();
         } else {
             try {
