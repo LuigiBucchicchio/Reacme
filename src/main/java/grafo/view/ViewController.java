@@ -103,7 +103,8 @@ public class ViewController implements Initializable {
                     validateValue(_nodeSemiEqualScoreID) &
                     validateValue(_edgeEqualScoreID) &
                     validateValue(_edgeNotEqualScoreID) &
-                    validateValue(_edgeSemiEqualScoreID);
+                    validateValue(_edgeSemiEqualScoreID) &
+                    validateNGram(_nGramID);
         }
         else {
             return validateValue(_gammaID);
@@ -140,6 +141,16 @@ public class ViewController implements Initializable {
                 textField.setStyle("-fx-border-color: transparent ; -fx-border-width: 0px ;");
                 return true;
             }
+        } else {
+            textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
+            return false;
+        }
+    }
+
+    private boolean validateNGram(TextField textField){
+        if(_nGramID.getText().matches("[0-9]*") && !_nGramID.getText().equals("")){
+            textField.setStyle("-fx-border-color: transparent ; -fx-border-width: 0px ;");
+            return true;
         } else {
             textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             return false;
