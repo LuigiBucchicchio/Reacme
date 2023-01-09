@@ -5,6 +5,7 @@ import com.opencsv.exceptions.CsvValidationException;
 import grafo.LogUtilsRepeatingGraph;
 import grafo.controller.TraceController;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
@@ -12,9 +13,15 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 
+import java.awt.*;
 import java.io.*;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static grafo.EnsembleRun.prepareForHeatMap;
@@ -45,6 +52,7 @@ public class ViewController implements Initializable {
     private TextField _nGramID;
 
     private File _xesDirectory = new File("");
+    private File outputDir = new File("./output/");
     private boolean validInputs = false;
 
     @Override
@@ -81,9 +89,36 @@ public class ViewController implements Initializable {
         }
     }
 
+    private void resetOutputDir() throws IOException {
+        try {
+            if(!isOutputDirEmpty()){
+                deleteFiles();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean isOutputDirEmpty() throws IOException {
+        try(DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(outputDir.getPath()))) {
+            return !dirStream.iterator().hasNext();
+        }
+    }
+
+    private boolean deleteFiles() throws IOException{
+        try(DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(outputDir.getPath()))) {
+            dirStream.forEach(p-> p.toFile().delete());
+        }
+        return isOutputDirEmpty();
+    }
+
     public void runMining() throws IOException, InterruptedException, CsvValidationException {
+        resetOutputDir();
+        if(!isOutputDirEmpty()){
+            deleteFiles();
+        }
         validInputs = checkInputValues();
-        if(validInputs){
+        if (validInputs) {
             startMining();
         } else {
             System.out.println("Invalid inputs");
@@ -95,9 +130,9 @@ public class ViewController implements Initializable {
      *
      * @return true se tutti i valori in input sono validi.
      */
-    private boolean checkInputValues(){
+    private boolean checkInputValues() {
         if (_changeScoreID.getValue().equals("Yes")) {
-            return  validateValue(_gammaID) &
+            return validateValue(_gammaID) &
                     validateValue(_nodeEqualScoreID) &
                     validateValue(_nodeNotEqualScoreID) &
                     validateValue(_nodeSemiEqualScoreID) &
@@ -105,8 +140,7 @@ public class ViewController implements Initializable {
                     validateValue(_edgeNotEqualScoreID) &
                     validateValue(_edgeSemiEqualScoreID) &
                     validateNGram(_nGramID);
-        }
-        else {
+        } else {
             return validateValue(_gammaID);
         }
     }
@@ -147,8 +181,8 @@ public class ViewController implements Initializable {
         }
     }
 
-    private boolean validateNGram(TextField textField){
-        if(_nGramID.getText().matches("[0-9]*") && !_nGramID.getText().equals("")){
+    private boolean validateNGram(TextField textField) {
+        if (_nGramID.getText().matches("[0-9]*") && !_nGramID.getText().equals("")) {
             textField.setStyle("-fx-border-color: transparent ; -fx-border-width: 0px ;");
             return true;
         } else {
@@ -183,11 +217,11 @@ public class ViewController implements Initializable {
 
         double gamma = Double.valueOf(_gammaID.getText());
 
-        if (_changeScoreID.getValue().equals("Yes")){
+        if (_changeScoreID.getValue().equals("Yes")) {
             double nodeEqualScoreID = Double.valueOf(_nodeEqualScoreID.getText());
             double nodeNotEqualScoreID = Double.valueOf(_nodeNotEqualScoreID.getText());
             double nodeSemiEqualScoreID = Double.valueOf(_nodeSemiEqualScoreID.getText());
-            double edgeEqualScoreID =  Double.valueOf(_edgeEqualScoreID.getText());
+            double edgeEqualScoreID = Double.valueOf(_edgeEqualScoreID.getText());
             double edgeNotEqualScoreID = Double.valueOf(_edgeNotEqualScoreID.getText());
             double edgeSemiEqualScoreID = Double.valueOf(_edgeSemiEqualScoreID.getText());
             int nGramID = Integer.valueOf(_nGramID.getText());
@@ -374,5 +408,38 @@ public class ViewController implements Initializable {
         }
         logUtils.generateNodeListReport("CUSTOM");
         prepareForHeatMap();
+        closeApplication();
+
+
     }
+
+    public void closeApplication() throws IOException {
+        if(isOutputDirEmpty()){
+            Platform.exit();
+        } else {
+            try {
+                Desktop.getDesktop().open(outputDir);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            Platform.exit();
+        }
+    }
+/*
+    public void closeApplication() throws IOException {
+        File outputDir =  new File("./output/");
+        if(outputDir.isDirectory() && Objects.requireNonNull(outputDir.list()).length == 0) {
+            Platform.exit();
+        } else {
+            try {
+                Desktop.getDesktop().open(new File("./output/"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            Platform.exit();
+        }
+    } */
+
+
 }
+

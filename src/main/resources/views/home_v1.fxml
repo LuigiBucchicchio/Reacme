@@ -61,14 +61,23 @@
     <bottom>
         <VBox prefHeight="200.0" prefWidth="100.0" styleClass="vbox-footer" stylesheets="@../styles/main.css" BorderPane.alignment="CENTER">
             <Separator prefWidth="200.0" />
-            <BorderPane prefHeight="200.0" prefWidth="200.0">
-                <right>
-                    <Button mnemonicParsing="false" onAction="#runMining" text="Start Mining" BorderPane.alignment="CENTER" />
-                </right>
-                <left>
-                    <Label fx:id="_xesFiles" text="No .xes files loaded" BorderPane.alignment="CENTER" />
-                </left>
-            </BorderPane>
+         <ButtonBar>
+            <buttons>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0">
+                      <right>
+                          <Label fx:id="_xesFiles" text="No .xes files loaded" BorderPane.alignment="CENTER" />
+                      </right>
+                  </BorderPane>
+                <BorderPane prefHeight="200.0" prefWidth="200.0">
+                    <left>
+                        <Button mnemonicParsing="false" onAction="#runMining" text="Start Mining" BorderPane.alignment="CENTER" />
+                    </left>
+                    <right>
+                        <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#closeApplication" prefWidth="82.0" text="Exit" BorderPane.alignment="CENTER" />
+                    </right>
+                </BorderPane>
+            </buttons>
+         </ButtonBar>
         </VBox>
     </bottom>
 </BorderPane>
