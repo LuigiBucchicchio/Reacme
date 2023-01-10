@@ -1,12 +1,8 @@
 package grafo;
 
-//import java.awt.Dimension;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
-
 import com.opencsv.CSVWriter;
 import grafo.controller.TraceController;
-import grafo.io.IO_Handler;
+import grafo.model.MiningScoreProperties;
 import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
@@ -52,45 +48,30 @@ import java.util.*;
 public class LogUtilsRepeatingGraph {
 
     private File[] fileList;
-    private int[] traceNum;
-    private double[] avgTraceLen;
-    private List<Graph> graphList = new ArrayList<Graph>();
+    private int[] numberOfTraces;
+    private double[] averageTraceLength;
+    private List<Graph> graphList = new ArrayList<>();
     private String[][] graphDissimilarity;
-    private String outputFileName = new String("");
+    private String outputFileName = "";
 
+    // Le variabili all'interno di questa contengono
+    private final MiningScoreProperties miningScoreProperties
+            = new MiningScoreProperties();
     //scores
     private boolean scoreChange = false;
-    private double edgeEqualScore = (double) 1.0;
-    private double edgeSemiScore = (double) 0.0;
-    private double edgeNotEqualScore = (double) 0.0;
-    private double nodeEqualScore = (double) 1.0;
-    private double nodeSemiScore = (double) 0.0;
-    private double nodeNotEqualScore = (double) 0.0;
-    private double gamma = (double) 0.0;
 
     private int nGram = 2;
 
-    //
     private boolean isTreCifre = false;
 
     static double startingTime;
 
-//	static int slider=0;
-//	
-//	static int slider1=0;
-//	static int slider2=0;
-//	static int slider3=0;
-//	static int slider4=0;
-//	static int slider5=0;
-//	static int slider6=0;
-//	
-
     /**
      * XES parser
      *
-     * @param filePath
+     * @param filePath il percorso del file .xes da aprire
      * @return XLog structured file
-     * @throws Exception
+     * @throws Exception il file non può essere analizzato
      */
     public XLog parseXES(String filePath) throws Exception {
         XesXmlParser parser = new XesXmlParser();
@@ -115,21 +96,18 @@ public class LogUtilsRepeatingGraph {
         System.out.println("Starting to analyze traces");
         startingTime = System.currentTimeMillis();
 
-        //int gram = Integer.parseInt(IO_Handler.requireInput("Please give me the n for grams: "));
-
         for (int i = 0; i < fileList.length; i++) {
             File file = fileList[i];
 
-            List<Trace> traceList = new ArrayList<Trace>();
+            List<Trace> traceList = new ArrayList<>();
 
             try {
                 XLog xlog = parseXES(file.getAbsolutePath());
                 //da cippus lives
                 //XLog xlog=parseXES("/home/cippus/Downloads/log (5).xes");
-
                 for (XTrace xTrace : xlog) {
-                    ArrayList<String> activitySequence = new ArrayList<String>();
-                    StringBuffer traceLine = new StringBuffer("");
+                    ArrayList<String> activitySequence = new ArrayList<>();
+                    StringBuffer traceLine = new StringBuffer();
                     // activitySequence = [t11, t45, t63, t12, t113, t9]
                     // traceLine = t11t45t63t12t113t9
 
@@ -180,8 +158,6 @@ public class LogUtilsRepeatingGraph {
             for (Trace trace : traceList) {
                 tot = tot + trace.getTraceLength();
             }
-            ;
-
 
             getAvgTraceLen()[i] = (double) tot / numeroTracce;
             getTraceNum()[i] = numeroTracce;
@@ -198,40 +174,28 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void convertToCSV(String[][] data) {
-        int nLog = fileList.length;
-        String directoryName = fileList[0].getParentFile().getName();
+        int numerOfLogs = fileList.length;
+        String logsDirectoryName = fileList[0].getParentFile().getName();
 
-        String Sgamma = String.valueOf(gamma);
-        Sgamma = Sgamma.replace(".0", "");
-        Sgamma = Sgamma.replace(".", "");
-        String s1 = String.valueOf(nodeEqualScore);
-        s1 = s1.replace(".0", "");
-        s1 = s1.replace(".", "");
-        String s2 = String.valueOf(nodeNotEqualScore);
-        s2 = s2.replace(".0", "");
-        s2 = s2.replace(".", "");
-        String s3 = String.valueOf(nodeSemiScore);
-        s3 = s3.replace(".0", "");
-        s3 = s3.replace(".", "");
-        String s4 = String.valueOf(edgeEqualScore);
-        s4 = s4.replace(".0", "");
-        s4 = s4.replace(".", "");
-        String s5 = String.valueOf(edgeNotEqualScore);
-        s5 = s5.replace(".0", "");
-        s5 = s5.replace(".", "");
-        String s6 = String.valueOf(edgeSemiScore);
-        s6 = s6.replace(".0", "");
-        s6 = s6.replace(".", "");
+        String Sgamma = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getGamma()));
+        String s1 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getNodeEqualScore()));
+        String s2 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getEdgeNotEqualScore()));
+        String s3 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getNodeSemiScore()));
+        String s4 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getEdgeEqualScore()));
+        String s5 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getEdgeNotEqualScore()));
+        String s6 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getEdgeSemiScore()));
 
         // TUTT' STUBBURDELL' PE' RINOMINA' L'OUTPUT
 
         if (getOutputFileName().equals(""))
-            setOutputFileName("DistanceGraph_" + directoryName + "_" + nLog + "Logs_gamma" + Sgamma + "_" + s1 + s2 + s3 + "_" + s4 + s5 + s6 + ".csv");
+            setOutputFileName("DistanceGraph_" + logsDirectoryName + "_" + numerOfLogs + "Logs_gamma" + Sgamma + "_" + s1 + s2 + s3 + "_" + s4 + s5 + s6 + ".csv");
 
         try {
             //cartellina
             File f = new File("output");
+            // TODO --> Controllare che la cartella di output non esista già altrimenti l'istruzione sotto è ignorata
             f.mkdir();
+
             File csvFile = new File(f.getAbsolutePath() + "\\" + getOutputFileName());
             //scriba, pls
             CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
@@ -244,6 +208,12 @@ public class LogUtilsRepeatingGraph {
             e.printStackTrace();
         }
 
+    }
+
+    private String cleanFieldFromZeroAndDot(String valueOf) {
+        valueOf = valueOf.replace(".0", "");
+        valueOf = valueOf.replace(".", "");
+        return valueOf;
     }
 
     /**
@@ -285,45 +255,43 @@ public class LogUtilsRepeatingGraph {
      */
     public String[][] generateDistanceMatrix() throws RuntimeException {
 
-        System.out.println("Starting the generation of the Distance Matrix");
+        /* Questo metodo fa decisamente troppe cose, le sue responsabilità sono troppe.
+        Queste andrebbero divise in metodi diversi con responsabilità diverse
+         */
+
+        // System.out.println("Starting the generation of the Distance Matrix");
 
         if (graphList.size() == 0) {
             throw new RuntimeException("invalid procedure: No Graph Found");
         }
 
-        graphDissimilarity = new String[graphList.size()][graphList.size()];
+        initGraphDissimilarity(graphList.size());
 
-        for (int i = 0; i < graphList.size(); i++) {
-            Graph graph1 = graphList.get(i);
-            // j=0
-            for (int j = 0; j < graphList.size(); j++) {
-                Graph graph2 = graphList.get(j);
-                if (j == i)
-                    graphDissimilarity[i][j] = "0.0";
+        for (int indexOfFirstGraph = 0; indexOfFirstGraph < graphList.size(); indexOfFirstGraph++) {
+            for (int indexOfSecondGraph = 0; indexOfSecondGraph < graphList.size(); indexOfSecondGraph++) {
+                if (indexOfSecondGraph == indexOfFirstGraph)
+                    graphDissimilarity[indexOfFirstGraph][indexOfSecondGraph] = "0.0";
                 else {
-                    if (graphDissimilarity[i][j] == null) {
+                    if (graphDissimilarity[indexOfFirstGraph][indexOfSecondGraph] == null) {
                         GraphComparator comp = new GraphComparator();
 
                         if (scoreChange) {
-                            comp.setEdgeEqualScore(edgeEqualScore);
-                            comp.setEdgeNotEqualScore(edgeNotEqualScore);
-                            comp.setEdgeSemiScore(edgeSemiScore);
-                            comp.setNodeEqualScore(nodeEqualScore);
-                            comp.setNodeNotEqualScore(nodeNotEqualScore);
-                            comp.setNodeSemiScore(nodeSemiScore);
+                            comp.setMiningScoreProperties(miningScoreProperties);
                         }
 
-                        comp.setGraph1(graph1);
-                        comp.setGraph2(graph2);
-                        comp.setLogUtilsGamma(gamma);
-                        Double metrics = (comp.getMetrics(gamma)) * 100;
+                        comp.setGraph1(graphList.get(indexOfFirstGraph));
+                        comp.setGraph2(graphList.get(indexOfSecondGraph));
+
+                        // TODO REVIEW LATER
+                        comp.setGamma(miningScoreProperties.getGamma());
+                        Double metrics = (comp.getMetrics(miningScoreProperties.getGamma())) * 100;
                         // trasformazione da SIMILARITY a DISSIMILARITY/DISTANCE
 
                         metrics = 100 - metrics;
 
                         DecimalFormat df = new DecimalFormat("#.00");
-                        graphDissimilarity[i][j] = String.valueOf(df.format(metrics));
-                        graphDissimilarity[j][i] = String.valueOf(df.format(metrics));
+                        graphDissimilarity[indexOfFirstGraph][indexOfSecondGraph] = df.format(metrics);
+                        graphDissimilarity[indexOfSecondGraph][indexOfFirstGraph] = df.format(metrics);
                     }
                 }
             }
@@ -359,6 +327,10 @@ public class LogUtilsRepeatingGraph {
         return distanceMatrix;
     }
 
+    private void initGraphDissimilarity(int size) {
+        graphDissimilarity = new String[size][size];
+    }
+
     /**
      * il metodo chiede se si vogliono cambiare i parametri o tenere quelli di default, considerando che nel confronto esistono: Click per dettagli <br>
      * Nodi/Attivit� o Archi/Transizioni NotRepeating (che appaiono una volta sola per singola traccia) A <br>
@@ -378,13 +350,15 @@ public class LogUtilsRepeatingGraph {
         double a = (double) 0.0;
 
         do {
-            System.out.println("Change the gamma value (default " + gamma + ")? <<y>> or <<n>>");
+            System.out.println("Change the gamma value (default " + miningScoreProperties.getGamma() + ")? <<y>> or <<n>>");
             input = tastiera.nextLine();
         } while ((!input.equals("y")) && (!input.equals("n")));
 
         if (input.equals("y")) {
+            // TODO REVIEW a VARIABLE
             System.out.println("\u2705 " + "Please insert the value of Gamma in a range between 0.0 and 1.0" + " \u2705");
             a = Double.valueOf(tastiera.nextLine());
+            miningScoreProperties.setGamma(a);
         }
 
         input = null;
@@ -396,37 +370,26 @@ public class LogUtilsRepeatingGraph {
         if (input.equals("y")) {
             this.scoreChange = true;
 
-            double newScore = (double) 1.0;
-            System.out.println("\u2705 " + "Insert the Node_Equal score (default " + nodeEqualScore + ")" + " \u2705");
+            double newScore;
+            System.out.println("\u2705 " + "Insert the Node_Equal score (default " + miningScoreProperties.getNodeEqualScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            this.nodeEqualScore = newScore;
-
-            newScore = (double) 0.0;
-            System.out.println("\u2705 " + "Insert the Node_NOT_Equal score (default " + nodeNotEqualScore + ")" + " \u2705");
+            miningScoreProperties.setNodeEqualScore(newScore);
+            System.out.println("\u2705 " + "Insert the Node_NOT_Equal score (default " + miningScoreProperties.getNodeNotEqualScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            this.nodeNotEqualScore = newScore;
-
-            newScore = (double) 0.0;
-            System.out.println("\u2705 " + "Insert the Node_Semi_Equal score (default " + nodeSemiScore + ")" + " \u2705");
+            miningScoreProperties.setNodeNotEqualScore(newScore);
+            System.out.println("\u2705 " + "Insert the Node_Semi_Equal score (default " + miningScoreProperties.getNodeSemiScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            this.nodeSemiScore = newScore;
-
-            newScore = (double) 1.0;
-            System.out.println("\u2705 " + "Insert the Edge_Equal score (default " + edgeEqualScore + ")" + " \u2705");
+            miningScoreProperties.setNodeSemiScore(newScore);
+            System.out.println("\u2705 " + "Insert the Edge_Equal score (default " + miningScoreProperties.getEdgeEqualScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            this.edgeEqualScore = newScore;
-
-            newScore = (double) 0.0;
-            System.out.println("\u2705 " + "Insert the Edge_NOT_Equal score (default " + edgeNotEqualScore + ")" + " \u2705");
+            miningScoreProperties.setEdgeEqualScore(newScore);
+            System.out.println("\u2705 " + "Insert the Edge_NOT_Equal score (default " + miningScoreProperties.getEdgeNotEqualScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            this.edgeNotEqualScore = newScore;
-
-            newScore = (double) 0.0;
-            System.out.println("\u2705 " + "Insert the Edge_Semi_Equal score (default " + edgeSemiScore + ")" + " \u2705");
+            miningScoreProperties.setEdgeNotEqualScore(newScore);
+            System.out.println("\u2705 " + "Insert the Edge_Semi_Equal score (default " + miningScoreProperties.getEdgeSemiScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            this.edgeSemiScore = newScore;
+            miningScoreProperties.setEdgeSemiScore(newScore);
         }
-        this.gamma = a;
 
     }
 
@@ -761,33 +724,13 @@ public class LogUtilsRepeatingGraph {
     }
 
     /**
-     * punteggio equals tra archi
-     *
-     * @return the score used comparing two edges both repeating or both notRepeating (A_>B with A_>B) def. 1.0
-     * @author luigi.bucchicchioAtgmail.com
-     */
-    public double getEdgeEqualScore() {
-        return edgeEqualScore;
-    }
-
-    /**
      * settaggio punteggio equals tra archi
      *
      * @param edgeEqualScore the score used comparing two edges both repeating or both notRepeating (A_>B with A_>B) def. 1.0
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setEdgeEqualScore(double edgeEqualScore) {
-        this.edgeEqualScore = edgeEqualScore;
-    }
-
-    /**
-     * punteggio semiEquals tra archi
-     *
-     * @return the score used comparing two edges, one repeating and one notRepeating (A_>B,R with A_>B) def. 0.5
-     * @author luigi.bucchicchioAtgmail.com
-     */
-    public double getEdgeSemiScore() {
-        return edgeSemiScore;
+        miningScoreProperties.setEdgeEqualScore(edgeEqualScore);
     }
 
     /**
@@ -797,7 +740,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setEdgeSemiScore(double edgeSemiScore) {
-        this.edgeSemiScore = edgeSemiScore;
+        miningScoreProperties.setEdgeSemiScore(edgeSemiScore);
     }
 
     /**
@@ -806,10 +749,6 @@ public class LogUtilsRepeatingGraph {
      * @return the score used comparing two edges, one existing with one not existing (A_>B with null) def 0.0
      * @author luigi.bucchicchioAtgmail.com
      */
-    public double getEdgeNotEqualScore() {
-        return edgeNotEqualScore;
-    }
-
     /**
      * settaggio punteggio disuguali tra archi
      *
@@ -817,17 +756,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setEdgeNotEqualScore(double edgeNotEqualScore) {
-        this.edgeNotEqualScore = edgeNotEqualScore;
-    }
-
-    /**
-     * punteggio equals tra nodi
-     *
-     * @return the nodeEqualScore() the score used comparing two nodes, both reapeating or both notRepeating (es. A with A) def. 1.0
-     * @author luigi.bucchicchioAtgmail.com
-     */
-    public double getNodeEqualScore() {
-        return nodeEqualScore;
+        miningScoreProperties.setEdgeNotEqualScore(edgeNotEqualScore);
     }
 
     /**
@@ -837,17 +766,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setNodeEqualScore(double nodeEqualScore) {
-        this.nodeEqualScore = nodeEqualScore;
-    }
-
-    /**
-     * punteggio semiEquals tra nodi
-     *
-     * @return the node SemiScore the score used comparing two nodes, one repeating and one notRepeating (es. A with A_R) def. 0.5
-     * @author luigi.bucchicchioAtgmail.com
-     */
-    public double getNodeSemiScore() {
-        return nodeSemiScore;
+        miningScoreProperties.setNodeEqualScore(nodeEqualScore);
     }
 
     /**
@@ -857,17 +776,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setNodeSemiScore(double nodeSemiScore) {
-        this.nodeSemiScore = nodeSemiScore;
-    }
-
-    /**
-     * punteggio disuguali tra nodi
-     *
-     * @return the node notEqualsScore the score used comparing two nodes, one existing and one not existing (es. A with null) def. 0.0
-     * @author luigi.bucchicchioAtgmail.com
-     */
-    public double getNodeNotEqualScore() {
-        return nodeNotEqualScore;
+        miningScoreProperties.setNodeSemiScore(nodeSemiScore);
     }
 
     /**
@@ -877,7 +786,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setNodeNotEqualScore(double nodeNotEqualScore) {
-        this.nodeNotEqualScore = nodeNotEqualScore;
+        miningScoreProperties.setNodeNotEqualScore(nodeNotEqualScore);
     }
 
     /**
@@ -887,7 +796,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public double getGamma() {
-        return gamma;
+        return miningScoreProperties.getGamma();
     }
 
     /**
@@ -897,7 +806,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setGamma(double gamma) {
-        this.gamma = gamma;
+        miningScoreProperties.setGamma(gamma);
     }
 
     public void setnGram(int nGram) {
@@ -952,7 +861,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public int[] getTraceNum() {
-        return traceNum;
+        return numberOfTraces;
     }
 
     /**
@@ -962,7 +871,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public double[] getAvgTraceLen() {
-        return avgTraceLen;
+        return averageTraceLength;
     }
 
     /**
@@ -972,7 +881,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setAvgTraceLen(double[] avgTraceLen) {
-        this.avgTraceLen = avgTraceLen;
+        this.averageTraceLength = avgTraceLen;
     }
 
     /**
@@ -982,7 +891,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setTraceNum(int[] traceNum) {
-        this.traceNum = traceNum;
+        this.numberOfTraces = traceNum;
     }
 
     public void generateNodeListReport(String etichettaDataset) {
@@ -1046,7 +955,6 @@ public class LogUtilsRepeatingGraph {
     public void setTreCifre(boolean isTreCifre) {
         this.isTreCifre = isTreCifre;
     }
-
 
 
 }

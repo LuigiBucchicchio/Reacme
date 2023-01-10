@@ -229,8 +229,6 @@ public class ViewController implements Initializable {
 
 
         logUtils.analyzeTraces();
-        // Metodo aggiunto per vedere il dizionario di n-gram
-        Stream.of(TraceController.dictionary);
         String[][] distanceMatrix = logUtils.generateDistanceMatrix();
 
         logUtils.convertToCSV(distanceMatrix);
