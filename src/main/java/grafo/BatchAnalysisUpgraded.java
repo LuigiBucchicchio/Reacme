@@ -202,7 +202,6 @@ public class BatchAnalysisUpgraded {
      * @author luigi.bucchicchioAtgmail.com
      */
     private static void startup() {
-
         Locale.setDefault(Locale.US);
         System.out.println("Log evaluation - ");
         JFileChooser chooser = new JFileChooser(".");

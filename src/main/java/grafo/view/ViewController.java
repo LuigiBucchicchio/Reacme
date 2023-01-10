@@ -146,20 +146,7 @@ public class ViewController implements Initializable {
         }
     }
 
-    /*
-    private boolean checkInputValues(){
-        List<TextField> inputValues = new LinkedList<TextField>();
-        inputValues.add(_gammaID);
-        inputValues.add(_nodeEqualScoreID);
-        inputValues.add(_nodeNotEqualScoreID);
-        inputValues.add(_nodeSemiEqualScoreID);
-        inputValues.add(_edgeEqualScoreID);
-        inputValues.add(_edgeNotEqualScoreID);
-        inputValues.add(_edgeSemiEqualScoreID);
-        List<Boolean> check= inputValues.stream().map(this::validateValue).toList();
-        return check.stream().allMatch(b -> b);
-    }
-*/
+
 
     /**
      * Questo metodo permette di validare l'input di gamma ed eventualmente degli score.
@@ -243,7 +230,7 @@ public class ViewController implements Initializable {
 
         logUtils.analyzeTraces();
         // Metodo aggiunto per vedere il dizionario di n-gram
-        Stream.of(TraceController.dictionary).forEach(System.out::println);
+        Stream.of(TraceController.dictionary);
         String[][] distanceMatrix = logUtils.generateDistanceMatrix();
 
         logUtils.convertToCSV(distanceMatrix);
@@ -264,145 +251,40 @@ public class ViewController implements Initializable {
         String currentPath = currentDirectory.getAbsolutePath();
         currentPath = currentPath.replace('\\', '/');
 
-        //System.out.println("Script path: " + scriptPath);
-        //System.out.println("Current path: " + currentPath);
+
         if (cores > 1 && ((logUtils.getFileList().length - 2) > (cores * 2))) {
             System.out.println("Clustering Algorithm start");
 
-            ProcessBuilder[] builders = new ProcessBuilder[cores];
-            Process[] processes = new Process[cores];
+            runProcessMultiCores(logUtils, cores, scriptPath, currentPath);
 
-            int subpart = (int) Math.floor((double) logUtils.getFileList().length / cores);
-
-            int diff = logUtils.getFileList().length - subpart * cores;
-
-            int last = 0;
-
-            //			if(log.getFileList().length<=(cores*4)) {
-
-            for (int i = 0; i < cores; i++) {
-                ProcessBuilder pb;
-                if (i == 0) {
-                    pb = new ProcessBuilder("python", scriptPath, "" + 2, "" + (last + subpart + diff) + "", "" + currentPath + "\\output");
-                    last = last + subpart + diff;
-                } else {
-                    pb = new ProcessBuilder("python", scriptPath, "" + last, "" + (last + subpart) + "", "" + currentPath + "\\output");
-                    last = last + subpart;
-                }
-                pb.redirectErrorStream(true);
-                builders[i] = pb;
-            }
-
-            for (int i = 0; i < cores; i++) {
-                processes[i] = builders[i].start();
-                System.out.println("Process " + i + " started");
-            }
-
-            System.out.print("waiting for " + processes.length + " processes to end");
-            for (int i = 0; i < cores; i++) {
-                processes[i].waitFor();
-                System.out.print(".");
-            }
             System.out.println("\nClustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
             System.out.println("Incoming Results on output directory...");
 
-            File dir = new File("");
-            String dirPath = dir.getAbsolutePath();
-            dir = new File(dirPath);
+            List<File> outputList = getFilesFromProcess();
 
-            List<File> fileList = new ArrayList<>();
-            Collections.addAll(fileList, dir.listFiles());
+            File winner = selectWinnerFile(outputList);
 
-            //fileList.forEach(System.out::println);
-            List<File> outputList = new ArrayList<>();
-            for (File nextFile : fileList) {
-                if (nextFile.getName().contains("clustering") || nextFile.getName().contains("smallOut"))
-                    outputList.add(nextFile);
-            }
+            File[] winners = deleteLosersFiles(outputList, winner);
 
-            Iterator<File> outputFileIterator = outputList.iterator();
-            double max = 0.0;
-            File winner = null;
-            CSVReader reader;
-            while (outputFileIterator.hasNext()) {
-                File nextOutputFile = outputFileIterator.next();
-                if (nextOutputFile.getName().contains("smallOut")) {
-                    reader = new CSVReader(new FileReader(nextOutputFile));
-                    String[] row = reader.readNext();
-                    double score = Double.parseDouble(row[1]);
-                    if (score > max) {
-                        max = score;
-                        winner = nextOutputFile;
-                    }
-                    reader.close();
-                }
-            }
-
-            File[] winners = new File[2];
-            int winnersIndex = 0;
-            String winnerName = winner.getName();
-            for (File file : outputList) {
-                int winnerNameIndex = winnerName.indexOf("smallOut");
-                String winnerNameNumber = winnerName.substring(0, winnerNameIndex);
-                if (!file.getName().contains(winnerNameNumber)) {
-                    file.deleteOnExit();
-                } else {
-                    winners[winnersIndex] = file;
-                    winnersIndex++;
-                }
-            }
-
-            String parentDir0 = winners[0].getParent();
-            parentDir0 = parentDir0 + "\\output";
-            String winner0name = winners[0].getName();
-            winners[0].renameTo(new File(parentDir0 + "\\" + winner0name));
-
-            String parentDir1 = winners[1].getParent();
-            parentDir1 = parentDir1 + "\\output";
-            String winner1name = winners[1].getName();
-            winners[1].renameTo(new File(parentDir1 + "\\" + winner1name));
+            moveFilesToOutputDirectory(winners[0], winners[1]);
 
             System.out.println("Done");
 
         } else {
             System.out.println("Clustering Algorithm start");
-            ProcessBuilder pb = new ProcessBuilder("python", scriptPath, "" + 2, "" + logUtils.getFileList().length + "", "" + currentPath + "\\output");
-            Process p = pb.start();
-            p.waitFor();
-            BufferedReader bfr = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line;
-            while ((line = bfr.readLine()) != null) {
-                System.out.println(line);
-            }
-            bfr.close();
+
+            runProcessSingleCore(logUtils, scriptPath, currentPath);
+
+
             System.out.println("Clustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
             System.out.println("Incoming Results on output directory...");
             Thread.sleep(1000);
 
+            List<File> outputList = getFilesFromProcess();
 
-            File dir = new File("");
-            String dirPath = dir.getAbsolutePath();
-            dir = new File(dirPath);
-
-            List<File> fileList = new ArrayList<>();
-            Collections.addAll(fileList, dir.listFiles());
-
-            List<File> outputList = new ArrayList<>();
-            for (File nextFile : fileList) {
-                if (nextFile.getName().contains("clustering") || nextFile.getName().contains("smallOut"))
-                    outputList.add(nextFile);
-            }
 
             if (outputList.size() == 2) {
-                String parentDir0 = outputList.get(0).getParent();
-                parentDir0 = parentDir0 + "\\output";
-                String winner0name = outputList.get(0).getName();
-                outputList.get(0).renameTo(new File(parentDir0 + "\\" + winner0name));
-
-                String parentDir1 = outputList.get(1).getParent();
-                parentDir1 = parentDir1 + "\\output";
-                String winner1name = outputList.get(1).getName();
-                outputList.get(1).renameTo(new File(parentDir1 + "\\" + winner1name));
+                moveFilesToOutputDirectory(outputList.get(0), outputList.get(1));
             }
 
             System.out.println("Done");
@@ -412,6 +294,159 @@ public class ViewController implements Initializable {
         closeApplication();
 
 
+    }
+
+    /**
+     *  sposta i file vincitori nella cartella di output
+     * @param winners
+     * @param winners1
+     */
+    private void moveFilesToOutputDirectory(File winners, File winners1) {
+        String parentDir0 = winners.getParent();
+        parentDir0 = parentDir0 + "\\output";
+        String winner0name = winners.getName();
+        winners.renameTo(new File(parentDir0 + "\\" + winner0name));
+
+        String parentDir1 = winners1.getParent();
+        parentDir1 = parentDir1 + "\\output";
+        String winner1name = winners1.getName();
+        winners1.renameTo(new File(parentDir1 + "\\" + winner1name));
+    }
+
+    /**
+     *  cancella i file smallOut non vincitori (max più basso)
+     * @param outputList
+     * @param winner
+     * @return
+     */
+    private File[] deleteLosersFiles(List<File> outputList, File winner) {
+        File[] winners = new File[2];
+        int winnersIndex = 0;
+        String winnerName = winner.getName();
+        for (File file : outputList) {
+            int winnerNameIndex = winnerName.indexOf("smallOut");
+            String winnerNameNumber = winnerName.substring(0, winnerNameIndex);
+            if (!file.getName().contains(winnerNameNumber)) {
+                file.deleteOnExit();
+            } else {
+                winners[winnersIndex] = file;
+                winnersIndex++;
+            }
+        }
+        return winners;
+    }
+
+    /**
+     * seleziona il file smallOut con lo score più alto
+     * @param outputList
+     * @return
+     * @throws IOException
+     * @throws CsvValidationException
+     */
+    private File selectWinnerFile(List<File> outputList) throws IOException, CsvValidationException {
+        Iterator<File> outputFileIterator = outputList.iterator();
+        double max = 0.0;
+        File winner = null;
+        CSVReader reader;
+        while (outputFileIterator.hasNext()) {
+            File nextOutputFile = outputFileIterator.next();
+            if (nextOutputFile.getName().contains("smallOut")) {
+                reader = new CSVReader(new FileReader(nextOutputFile));
+                String[] row = reader.readNext();
+
+                double score = Double.parseDouble(row[1]);
+                if (score > max) {
+                    max = score;
+                    winner = nextOutputFile;
+                }
+                reader.close();
+            }
+        }
+        return winner;
+    }
+
+    /**
+     *
+     * @param logUtils
+     * @param scriptPath
+     * @param currentPath
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void runProcessSingleCore(LogUtilsRepeatingGraph logUtils, String scriptPath, String currentPath) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder("python", scriptPath, "" + 2, "" + logUtils.getFileList().length + "", "" + currentPath + "\\output");
+        Process p = pb.start();
+        p.waitFor();
+        BufferedReader bfr = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line;
+        while ((line = bfr.readLine()) != null) {
+            System.out.println(line);
+        }
+        bfr.close();
+    }
+
+    /**
+     *
+     * @return
+     */
+    private List<File> getFilesFromProcess() {
+        File dir = new File("");
+        String dirPath = dir.getAbsolutePath();
+        dir = new File(dirPath);
+
+        List<File> fileList = new ArrayList<>();
+        Collections.addAll(fileList, dir.listFiles());
+
+        List<File> outputList = new ArrayList<>();
+        for (File nextFile : fileList) {
+            if (nextFile.getName().contains("clustering") || nextFile.getName().contains("smallOut"))
+                outputList.add(nextFile);
+        }
+        return outputList;
+    }
+
+    /**
+     *
+     * @param logUtils
+     * @param cores
+     * @param scriptPath
+     * @param currentPath
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void runProcessMultiCores(LogUtilsRepeatingGraph logUtils, int cores, String scriptPath, String currentPath) throws IOException, InterruptedException {
+        ProcessBuilder[] builders = new ProcessBuilder[cores];
+        Process[] processes = new Process[cores];
+
+        int subpart = (int) Math.floor((double) logUtils.getFileList().length / cores);
+
+        int diff = logUtils.getFileList().length - subpart * cores;
+
+        int last = 0;
+
+
+        for (int i = 0; i < cores; i++) {
+            ProcessBuilder pb;
+            if (i == 0) {
+                pb = new ProcessBuilder("python", scriptPath, "" + 2, "" + (last + subpart + diff) + "", "" + currentPath + "\\output");
+                last = last + subpart + diff;
+            } else {
+                pb = new ProcessBuilder("python", scriptPath, "" + last, "" + (last + subpart) + "", "" + currentPath + "\\output");
+                last = last + subpart;
+            }
+            pb.redirectErrorStream(true);
+            builders[i] = pb;
+        }
+
+        for (int i = 0; i < cores; i++) {
+            processes[i] = builders[i].start();
+        }
+
+        System.out.print("waiting for " + processes.length + " processes to end");
+        for (int i = 0; i < cores; i++) {
+            processes[i].waitFor();
+            System.out.print(".");
+        }
     }
 
     public void closeApplication() throws IOException {
@@ -426,20 +461,7 @@ public class ViewController implements Initializable {
             Platform.exit();
         }
     }
-/*
-    public void closeApplication() throws IOException {
-        File outputDir =  new File("./output/");
-        if(outputDir.isDirectory() && Objects.requireNonNull(outputDir.list()).length == 0) {
-            Platform.exit();
-        } else {
-            try {
-                Desktop.getDesktop().open(new File("./output/"));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Platform.exit();
-        }
-    } */
+
 
 
 }
