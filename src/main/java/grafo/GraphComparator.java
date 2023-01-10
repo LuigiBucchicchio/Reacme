@@ -1,6 +1,6 @@
 package grafo;
 
-import grafo.model.MiningScoreProperties;
+import grafo.model.ProcessMiningRunProperties;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
@@ -16,8 +16,8 @@ import java.util.List;
  */
 public class GraphComparator {
 
-    private MiningScoreProperties miningScoreProperties
-            = new MiningScoreProperties(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    private ProcessMiningRunProperties processMiningRunProperties
+            = new ProcessMiningRunProperties();
 
     public double nodeScore = 0.00;
     public double edgeScore = 0.00;
@@ -113,13 +113,13 @@ public class GraphComparator {
         for (Node n : nodeSuperSet) {
             if (graph1.getNode(n.getId()) == null) {
 
-                nodeScore = nodeScore + miningScoreProperties.getNodeNotEqualScore();
+                nodeScore = nodeScore + processMiningRunProperties.getNodeNotEqualScore();
 
             } else {
 
                 if (graph2.getNode(n.getId()) == null) {
 
-                    nodeScore = nodeScore + miningScoreProperties.getNodeNotEqualScore();
+                    nodeScore = nodeScore + processMiningRunProperties.getNodeNotEqualScore();
 
                 } else {
 
@@ -135,20 +135,20 @@ public class GraphComparator {
                     // R_t56
 
                     if (string1.equals(string2)) {
-                        nodeScore = nodeScore + miningScoreProperties.getNodeEqualScore();
+                        nodeScore = nodeScore + processMiningRunProperties.getNodeEqualScore();
                     } else {
                         //R_A A
                         if (string1.length() > 1 && string2.length() == 1) {
-                            nodeScore = nodeScore + miningScoreProperties.getNodeSemiScore();
+                            nodeScore = nodeScore + processMiningRunProperties.getNodeSemiScore();
                             //A R_A
                         } else if (string2.length() > 1 && string1.length() == 1) {
-                            nodeScore = nodeScore + miningScoreProperties.getNodeSemiScore();
+                            nodeScore = nodeScore + processMiningRunProperties.getNodeSemiScore();
                             //something R_something
                         } else if (string2.charAt(1) == '_' && string1.charAt(1) != '_') {
-                            nodeScore = nodeScore + miningScoreProperties.getNodeSemiScore();
+                            nodeScore = nodeScore + processMiningRunProperties.getNodeSemiScore();
                             //R_something something
                         } else if (string1.charAt(1) == '_' && string2.charAt(1) != '_') {
-                            nodeScore = nodeScore + miningScoreProperties.getNodeSemiScore();
+                            nodeScore = nodeScore + processMiningRunProperties.getNodeSemiScore();
                         } else {
                             System.out.println(string1 + " " + string2);
                             throw new IllegalArgumentException();
@@ -164,10 +164,10 @@ public class GraphComparator {
 
         for (Edge e : edgeSuperSet) {
             if (graph1.getEdge(e.getId()) == null) {
-                edgeScore = edgeScore + miningScoreProperties.getEdgeNotEqualScore();
+                edgeScore = edgeScore + processMiningRunProperties.getEdgeNotEqualScore();
             } else {
                 if (graph2.getEdge(e.getId()) == null) {
-                    edgeScore = edgeScore + miningScoreProperties.getEdgeNotEqualScore();
+                    edgeScore = edgeScore + processMiningRunProperties.getEdgeNotEqualScore();
                 } else {
 
                     Edge edge1 = graph1.getEdge(e.getId());
@@ -180,20 +180,20 @@ public class GraphComparator {
 
                     if (label1 == null) {
                         if (label2 == null) {
-                            edgeScore = edgeScore + miningScoreProperties.getEdgeEqualScore();
+                            edgeScore = edgeScore + processMiningRunProperties.getEdgeEqualScore();
                         } else if (label2.charAt(0) == 'R') {
-                            edgeScore = edgeScore + miningScoreProperties.getEdgeSemiScore();
+                            edgeScore = edgeScore + processMiningRunProperties.getEdgeSemiScore();
                         } else {
                             throw new IllegalArgumentException();
                         }
                     } else {
                         if (label2 == null) {
                             if (label1.charAt(0) == 'R')
-                                edgeScore = edgeScore + miningScoreProperties.getEdgeSemiScore();
+                                edgeScore = edgeScore + processMiningRunProperties.getEdgeSemiScore();
                             else throw new IllegalArgumentException();
                         } else {
                             if (label1.equals(label2))
-                                edgeScore = edgeScore + miningScoreProperties.getEdgeEqualScore();
+                                edgeScore = edgeScore + processMiningRunProperties.getEdgeEqualScore();
                             else
                                 throw new IllegalArgumentException();
                         }
@@ -235,35 +235,35 @@ public class GraphComparator {
 
 
     public void setEdgeEqualScore(double edgeEqualScore) {
-        miningScoreProperties.setEdgeEqualScore(edgeEqualScore);
+        processMiningRunProperties.setEdgeEqualScore(edgeEqualScore);
     }
 
     public void setEdgeSemiScore(double edgeSemiScore) {
-        miningScoreProperties.setEdgeSemiScore(edgeSemiScore);
+        processMiningRunProperties.setEdgeSemiScore(edgeSemiScore);
     }
 
     public void setEdgeNotEqualScore(double edgeNotEqualScore) {
-        miningScoreProperties.setEdgeNotEqualScore(edgeNotEqualScore);
+        processMiningRunProperties.setEdgeNotEqualScore(edgeNotEqualScore);
     }
 
     public void setNodeEqualScore(double nodeEqualScore) {
-        miningScoreProperties.setNodeEqualScore(nodeEqualScore);
+        processMiningRunProperties.setNodeEqualScore(nodeEqualScore);
     }
 
     public void setNodeSemiScore(double nodeSemiScore) {
-        miningScoreProperties.setNodeSemiScore(nodeSemiScore);
+        processMiningRunProperties.setNodeSemiScore(nodeSemiScore);
     }
 
     public void setNodeNotEqualScore(double nodeNotEqualScore) {
-        miningScoreProperties.setNodeNotEqualScore(nodeNotEqualScore);
+        processMiningRunProperties.setNodeNotEqualScore(nodeNotEqualScore);
     }
 
     public void setGamma(double gamma) {
-        miningScoreProperties.setGamma(gamma);
+        processMiningRunProperties.setGamma(gamma);
     }
 
-    public void setMiningScoreProperties(MiningScoreProperties miningScoreProperties) {
-        this.miningScoreProperties = miningScoreProperties;
+    public void setMiningScoreProperties(ProcessMiningRunProperties processMiningRunProperties) {
+        this.processMiningRunProperties = processMiningRunProperties;
     }
 
 }

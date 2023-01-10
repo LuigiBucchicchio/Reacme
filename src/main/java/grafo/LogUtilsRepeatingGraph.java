@@ -2,7 +2,7 @@ package grafo;
 
 import com.opencsv.CSVWriter;
 import grafo.controller.TraceController;
-import grafo.model.MiningScoreProperties;
+import grafo.model.ProcessMiningRunProperties;
 import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
@@ -55,9 +55,14 @@ public class LogUtilsRepeatingGraph {
     private String outputFileName = "";
 
     // Le variabili all'interno di questa contengono
-    private final MiningScoreProperties miningScoreProperties
-            = new MiningScoreProperties();
+    private ProcessMiningRunProperties processMiningRunProperties
+            = new ProcessMiningRunProperties();
+
     //scores
+    public void setProcessMiningRunProperties(ProcessMiningRunProperties processMiningRunProperties) {
+        this.processMiningRunProperties = processMiningRunProperties;
+    }
+
     private boolean scoreChange = false;
 
     private int nGram = 2;
@@ -103,7 +108,6 @@ public class LogUtilsRepeatingGraph {
 
             try {
                 XLog xlog = parseXES(file.getAbsolutePath());
-                //da cippus lives
                 //XLog xlog=parseXES("/home/cippus/Downloads/log (5).xes");
                 for (XTrace xTrace : xlog) {
                     ArrayList<String> activitySequence = new ArrayList<>();
@@ -177,13 +181,13 @@ public class LogUtilsRepeatingGraph {
         int numerOfLogs = fileList.length;
         String logsDirectoryName = fileList[0].getParentFile().getName();
 
-        String Sgamma = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getGamma()));
-        String s1 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getNodeEqualScore()));
-        String s2 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getEdgeNotEqualScore()));
-        String s3 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getNodeSemiScore()));
-        String s4 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getEdgeEqualScore()));
-        String s5 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getEdgeNotEqualScore()));
-        String s6 = cleanFieldFromZeroAndDot(String.valueOf(miningScoreProperties.getEdgeSemiScore()));
+        String Sgamma = cleanFieldFromZeroAndDot(String.valueOf(processMiningRunProperties.getGamma()));
+        String s1 = cleanFieldFromZeroAndDot(String.valueOf(processMiningRunProperties.getNodeEqualScore()));
+        String s2 = cleanFieldFromZeroAndDot(String.valueOf(processMiningRunProperties.getEdgeNotEqualScore()));
+        String s3 = cleanFieldFromZeroAndDot(String.valueOf(processMiningRunProperties.getNodeSemiScore()));
+        String s4 = cleanFieldFromZeroAndDot(String.valueOf(processMiningRunProperties.getEdgeEqualScore()));
+        String s5 = cleanFieldFromZeroAndDot(String.valueOf(processMiningRunProperties.getEdgeNotEqualScore()));
+        String s6 = cleanFieldFromZeroAndDot(String.valueOf(processMiningRunProperties.getEdgeSemiScore()));
 
         // TUTT' STUBBURDELL' PE' RINOMINA' L'OUTPUT
 
@@ -273,18 +277,18 @@ public class LogUtilsRepeatingGraph {
                     graphDissimilarity[indexOfFirstGraph][indexOfSecondGraph] = "0.0";
                 else {
                     if (graphDissimilarity[indexOfFirstGraph][indexOfSecondGraph] == null) {
-                        GraphComparator comp = new GraphComparator();
+                        GraphComparator graphComparator = new GraphComparator();
 
                         if (scoreChange) {
-                            comp.setMiningScoreProperties(miningScoreProperties);
+                            graphComparator.setMiningScoreProperties(processMiningRunProperties);
                         }
 
-                        comp.setGraph1(graphList.get(indexOfFirstGraph));
-                        comp.setGraph2(graphList.get(indexOfSecondGraph));
+                        graphComparator.setGraph1(graphList.get(indexOfFirstGraph));
+                        graphComparator.setGraph2(graphList.get(indexOfSecondGraph));
 
                         // TODO REVIEW LATER
-                        comp.setGamma(miningScoreProperties.getGamma());
-                        Double metrics = (comp.getMetrics(miningScoreProperties.getGamma())) * 100;
+                        graphComparator.setGamma(processMiningRunProperties.getGamma());
+                        Double metrics = (graphComparator.getMetrics(processMiningRunProperties.getGamma())) * 100;
                         // trasformazione da SIMILARITY a DISSIMILARITY/DISTANCE
 
                         metrics = 100 - metrics;
@@ -350,7 +354,7 @@ public class LogUtilsRepeatingGraph {
         double a = (double) 0.0;
 
         do {
-            System.out.println("Change the gamma value (default " + miningScoreProperties.getGamma() + ")? <<y>> or <<n>>");
+            System.out.println("Change the gamma value (default " + processMiningRunProperties.getGamma() + ")? <<y>> or <<n>>");
             input = tastiera.nextLine();
         } while ((!input.equals("y")) && (!input.equals("n")));
 
@@ -358,7 +362,7 @@ public class LogUtilsRepeatingGraph {
             // TODO REVIEW a VARIABLE
             System.out.println("\u2705 " + "Please insert the value of Gamma in a range between 0.0 and 1.0" + " \u2705");
             a = Double.valueOf(tastiera.nextLine());
-            miningScoreProperties.setGamma(a);
+            processMiningRunProperties.setGamma(a);
         }
 
         input = null;
@@ -371,24 +375,24 @@ public class LogUtilsRepeatingGraph {
             this.scoreChange = true;
 
             double newScore;
-            System.out.println("\u2705 " + "Insert the Node_Equal score (default " + miningScoreProperties.getNodeEqualScore() + ")" + " \u2705");
+            System.out.println("\u2705 " + "Insert the Node_Equal score (default " + processMiningRunProperties.getNodeEqualScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            miningScoreProperties.setNodeEqualScore(newScore);
-            System.out.println("\u2705 " + "Insert the Node_NOT_Equal score (default " + miningScoreProperties.getNodeNotEqualScore() + ")" + " \u2705");
+            processMiningRunProperties.setNodeEqualScore(newScore);
+            System.out.println("\u2705 " + "Insert the Node_NOT_Equal score (default " + processMiningRunProperties.getNodeNotEqualScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            miningScoreProperties.setNodeNotEqualScore(newScore);
-            System.out.println("\u2705 " + "Insert the Node_Semi_Equal score (default " + miningScoreProperties.getNodeSemiScore() + ")" + " \u2705");
+            processMiningRunProperties.setNodeNotEqualScore(newScore);
+            System.out.println("\u2705 " + "Insert the Node_Semi_Equal score (default " + processMiningRunProperties.getNodeSemiScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            miningScoreProperties.setNodeSemiScore(newScore);
-            System.out.println("\u2705 " + "Insert the Edge_Equal score (default " + miningScoreProperties.getEdgeEqualScore() + ")" + " \u2705");
+            processMiningRunProperties.setNodeSemiScore(newScore);
+            System.out.println("\u2705 " + "Insert the Edge_Equal score (default " + processMiningRunProperties.getEdgeEqualScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            miningScoreProperties.setEdgeEqualScore(newScore);
-            System.out.println("\u2705 " + "Insert the Edge_NOT_Equal score (default " + miningScoreProperties.getEdgeNotEqualScore() + ")" + " \u2705");
+            processMiningRunProperties.setEdgeEqualScore(newScore);
+            System.out.println("\u2705 " + "Insert the Edge_NOT_Equal score (default " + processMiningRunProperties.getEdgeNotEqualScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            miningScoreProperties.setEdgeNotEqualScore(newScore);
-            System.out.println("\u2705 " + "Insert the Edge_Semi_Equal score (default " + miningScoreProperties.getEdgeSemiScore() + ")" + " \u2705");
+            processMiningRunProperties.setEdgeNotEqualScore(newScore);
+            System.out.println("\u2705 " + "Insert the Edge_Semi_Equal score (default " + processMiningRunProperties.getEdgeSemiScore() + ")" + " \u2705");
             newScore = Double.valueOf(tastiera.nextLine());
-            miningScoreProperties.setEdgeSemiScore(newScore);
+            processMiningRunProperties.setEdgeSemiScore(newScore);
         }
 
     }
@@ -730,7 +734,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setEdgeEqualScore(double edgeEqualScore) {
-        miningScoreProperties.setEdgeEqualScore(edgeEqualScore);
+        processMiningRunProperties.setEdgeEqualScore(edgeEqualScore);
     }
 
     /**
@@ -740,7 +744,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setEdgeSemiScore(double edgeSemiScore) {
-        miningScoreProperties.setEdgeSemiScore(edgeSemiScore);
+        processMiningRunProperties.setEdgeSemiScore(edgeSemiScore);
     }
 
     /**
@@ -756,7 +760,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setEdgeNotEqualScore(double edgeNotEqualScore) {
-        miningScoreProperties.setEdgeNotEqualScore(edgeNotEqualScore);
+        processMiningRunProperties.setEdgeNotEqualScore(edgeNotEqualScore);
     }
 
     /**
@@ -766,7 +770,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setNodeEqualScore(double nodeEqualScore) {
-        miningScoreProperties.setNodeEqualScore(nodeEqualScore);
+        processMiningRunProperties.setNodeEqualScore(nodeEqualScore);
     }
 
     /**
@@ -776,7 +780,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setNodeSemiScore(double nodeSemiScore) {
-        miningScoreProperties.setNodeSemiScore(nodeSemiScore);
+        processMiningRunProperties.setNodeSemiScore(nodeSemiScore);
     }
 
     /**
@@ -786,7 +790,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setNodeNotEqualScore(double nodeNotEqualScore) {
-        miningScoreProperties.setNodeNotEqualScore(nodeNotEqualScore);
+        processMiningRunProperties.setNodeNotEqualScore(nodeNotEqualScore);
     }
 
     /**
@@ -796,7 +800,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public double getGamma() {
-        return miningScoreProperties.getGamma();
+        return processMiningRunProperties.getGamma();
     }
 
     /**
@@ -806,7 +810,7 @@ public class LogUtilsRepeatingGraph {
      * @author luigi.bucchicchioAtgmail.com
      */
     public void setGamma(double gamma) {
-        miningScoreProperties.setGamma(gamma);
+        processMiningRunProperties.setGamma(gamma);
     }
 
     public void setnGram(int nGram) {

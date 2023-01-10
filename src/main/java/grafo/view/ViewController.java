@@ -3,7 +3,7 @@ package grafo.view;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import grafo.LogUtilsRepeatingGraph;
-import grafo.controller.TraceController;
+import grafo.model.ProcessMiningRunProperties;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -21,7 +21,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
-import java.util.stream.Stream;
 
 import static grafo.EnsembleRun.prepareForHeatMap;
 
@@ -46,26 +45,31 @@ public class ViewController implements Initializable {
     private TextField _edgeNotEqualScoreID;
     @FXML
     private TextField _edgeSemiEqualScoreID;
-
     @FXML
     private TextField _nGramID;
 
+    private final LogUtilsRepeatingGraph logUtils = new LogUtilsRepeatingGraph();
+
     private File _xesDirectory = new File("");
     private final File outputDir = new File("./output/");
-    private boolean validInputs = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         _changeScoreID.getItems().addAll("No", "Yes");
         _changeScoreID.setValue("No");
+
     }
 
+    /* REMINDER --> QUESTA ANNOTAZIONE, PERMETTE DI IGNORARE GLI WARNINGS. IN QUESTO CASO ESSI SONO RELATIVI AL
+     *          Dereference of '_xesDirectory.listFiles()' may produce 'NullPointerException'
+     */
+    @SuppressWarnings("ConstantConditions")
     public void loadDirectory() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select XES Files Directory");
         directoryChooser.setInitialDirectory(new java.io.File("."));
         _xesDirectory = directoryChooser.showDialog(null);
-        _xesFiles.setText(_xesDirectory.listFiles().length == 0 ? "No files found" : _xesDirectory.getAbsolutePath());
+        _xesFiles.setText(_xesDirectory.listFiles().length == 0 ? "No files found" : "Files found: " + _xesDirectory.listFiles().length);
     }
 
     public void changeScore() {
@@ -111,20 +115,20 @@ public class ViewController implements Initializable {
         isOutputDirEmpty();
     }
 
-    public void runMining() throws IOException, InterruptedException, CsvValidationException {
+    public void runMining() throws Exception {
         if (outputDir.exists()) {
             resetOutputDir();
             if (!isOutputDirEmpty()) {
                 deleteFiles();
             }
         }
-        validInputs = checkInputValues();
-        if (validInputs) {
+        if (checkInputValues()) {
             startMining();
         } else {
             System.out.println("Invalid inputs");
         }
     }
+
 
     /**
      * Questo metodo permette di controllare la validità di tutti i valori inseriti: gamma, score, ngram.
@@ -133,19 +137,11 @@ public class ViewController implements Initializable {
      */
     private boolean checkInputValues() {
         if (_changeScoreID.getValue().equals("Yes")) {
-            return validateValue(_gammaID) &
-                    validateValue(_nodeEqualScoreID) &
-                    validateValue(_nodeNotEqualScoreID) &
-                    validateValue(_nodeSemiEqualScoreID) &
-                    validateValue(_edgeEqualScoreID) &
-                    validateValue(_edgeNotEqualScoreID) &
-                    validateValue(_edgeSemiEqualScoreID) &
-                    validateNGram(_nGramID);
+            return visualValidate(_gammaID) & visualValidate(_nodeEqualScoreID) & visualValidate(_nodeNotEqualScoreID) & visualValidate(_nodeSemiEqualScoreID) & visualValidate(_edgeEqualScoreID) & visualValidate(_edgeNotEqualScoreID) & visualValidate(_edgeSemiEqualScoreID) & validateVisualNGram(_nGramID);
         } else {
-            return validateValue(_gammaID);
+            return visualValidate(_gammaID);
         }
     }
-
 
 
     /**
@@ -154,137 +150,122 @@ public class ViewController implements Initializable {
      *
      * @param textField il campo da validare
      */
-    private boolean validateValue(TextField textField) {
-        if (textField.getText().matches("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$")) {
-            if (Double.parseDouble(textField.getText()) < 0 || Double.parseDouble(textField.getText()) > 1) {
-                textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-                return false;
-            } else {
-                textField.setStyle("-fx-border-color: transparent ; -fx-border-width: 0px ;");
-                return true;
-            }
-        } else {
-            textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            return false;
-        }
-    }
-
-    private boolean validateNGram(TextField textField) {
-        if (_nGramID.getText().matches("[0-9]*") && !_nGramID.getText().equals("")) {
-            textField.setStyle("-fx-border-color: transparent ; -fx-border-width: 0px ;");
+    private boolean visualValidate(TextField textField) {
+        if (isValidNumber(textField) && !isNumberOutOfRange(textField)) {
+            setValidStyle(textField);
             return true;
         } else {
-            textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
+            setInvalidStyle(textField);
             return false;
         }
     }
 
+    /**
+     * Questo metodo serve per togliere le propriet&agrave; applicate con il metodo <code>setInvalidStyle</code>
+     *
+     * @param textField field al quale applicare lo stile
+     */
+    private void setValidStyle(TextField textField) {
+        textField.setStyle("-fx-border-color: transparent ; -fx-border-width: 0px ;");
+    }
+
+    /**
+     * Questo metodo serve per applicare uno stile di errore in modo da aiutare l'utente a capire qual'&egrave; il
+     * field che &egrave; risultato invalido
+     *
+     * @param textField field al quale applicare lo stile
+     */
+    private void setInvalidStyle(TextField textField) {
+        textField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
+    }
+
+
+    /**
+     * Questo metodo controlla se il contenuto del Field rispetta il formato numerico
+     *
+     * @param textField il field da controllare
+     * @return <code>true</code> se valido, <code>false</code> altrimenti
+     */
+    private static boolean isValidNumber(TextField textField) {
+        return textField.getText().matches("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$");
+    }
+
+    /**
+     * Questo metodo controlla che il numero rispetti il range.
+     * Il range &egrave; definito da [0.0 - 1.0]
+     *
+     * @param textField field al quale controllare il valore
+     * @return <code>true</code> se valido, <code>false</code> altrimenti
+     */
+    private static boolean isNumberOutOfRange(TextField textField) {
+        return Double.parseDouble(textField.getText()) < 0 || Double.parseDouble(textField.getText()) > 1;
+    }
+
+    private boolean validateVisualNGram(TextField textField) {
+        if (_nGramID.getText().matches("[0-9]*") && !_nGramID.getText().equals("")) {
+            setValidStyle(textField);
+            return true;
+        } else {
+            setInvalidStyle(textField);
+            return false;
+        }
+    }
 
     /**
      * Questo metodo permette di avviare il process mining.
      * Si può dire che è la copia del metodo main di EnsembleRun
      */
-    private void startMining() throws IOException, InterruptedException, CsvValidationException {
+    private void startMining() throws Exception {
         long startingTime = System.currentTimeMillis();
         Locale.setDefault(Locale.US);
         System.out.println("Log evaluation start");
-        LogUtilsRepeatingGraph logUtils = new LogUtilsRepeatingGraph();
 
         logUtils.setFileList(_xesDirectory.listFiles());
         int size = _xesDirectory.listFiles().length;
 
-        if (size <= 2) {
-            System.out.println("Not enough Input XES Files found");
-            System.exit(99);
-        }
+        checkNumerOfFilesAvailable(size);
 
         logUtils.setTraceNum(new int[size]);
         logUtils.setAvgTraceLen(new double[size]);
         logUtils.setScoreChange(true);
         logUtils.setTreCifre(false);
 
-        double gamma = Double.valueOf(_gammaID.getText());
-
-        if (_changeScoreID.getValue().equals("Yes")) {
-            double nodeEqualScoreID = Double.valueOf(_nodeEqualScoreID.getText());
-            double nodeNotEqualScoreID = Double.valueOf(_nodeNotEqualScoreID.getText());
-            double nodeSemiEqualScoreID = Double.valueOf(_nodeSemiEqualScoreID.getText());
-            double edgeEqualScoreID = Double.valueOf(_edgeEqualScoreID.getText());
-            double edgeNotEqualScoreID = Double.valueOf(_edgeNotEqualScoreID.getText());
-            double edgeSemiEqualScoreID = Double.valueOf(_edgeSemiEqualScoreID.getText());
-            int nGramID = Integer.valueOf(_nGramID.getText());
-
-
-            logUtils.setGamma(gamma);
-            logUtils.setNodeEqualScore(nodeEqualScoreID);
-            logUtils.setNodeNotEqualScore(nodeNotEqualScoreID);
-            logUtils.setNodeSemiScore(nodeSemiEqualScoreID);
-            logUtils.setEdgeEqualScore(edgeEqualScoreID);
-            logUtils.setEdgeNotEqualScore(edgeNotEqualScoreID);
-            logUtils.setEdgeSemiScore(edgeSemiEqualScoreID);
-            logUtils.setnGram(nGramID);
-        } else {
-            logUtils.setGamma(gamma);
-        }
-
+        setProcessMiningRunProperties();
 
         logUtils.analyzeTraces();
         String[][] distanceMatrix = logUtils.generateDistanceMatrix();
-
         logUtils.convertToCSV(distanceMatrix);
-        System.out.println("Evaluation Terminated - Execution Time:" + (System.currentTimeMillis() - startingTime));
 
+        System.out.println("Evaluation Terminated - Execution Time:" + (System.currentTimeMillis() - startingTime));
         // Multi-threading
         int cores = Runtime.getRuntime().availableProcessors();
-
         System.out.println("System cores: " + cores);
-        File script = new File(
-                Optional
-                        .ofNullable(System.getenv("CLUSTERING_SCRIPT_PATH"))
-                        .orElse("main.py")
-        );
+        File script = new File(Optional.ofNullable(System.getenv("CLUSTERING_SCRIPT_PATH")).orElse("main.py"));
         String scriptPath = script.getAbsolutePath();
         scriptPath = scriptPath.replace('\\', '/');
         File currentDirectory = new File("");
         String currentPath = currentDirectory.getAbsolutePath();
         currentPath = currentPath.replace('\\', '/');
-
-
         if (cores > 1 && ((logUtils.getFileList().length - 2) > (cores * 2))) {
             System.out.println("Clustering Algorithm start");
-
             runProcessMultiCores(logUtils, cores, scriptPath, currentPath);
-
             System.out.println("\nClustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
             System.out.println("Incoming Results on output directory...");
-
             List<File> outputList = getFilesFromProcess();
-
             File winner = selectWinnerFile(outputList);
-
             File[] winners = deleteLosersFiles(outputList, winner);
-
             moveFilesToOutputDirectory(winners[0], winners[1]);
-
             System.out.println("Done");
-
         } else {
             System.out.println("Clustering Algorithm start");
-
             runProcessSingleCore(logUtils, scriptPath, currentPath);
-
-
             System.out.println("Clustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
             System.out.println("Incoming Results on output directory...");
             Thread.sleep(1000);
-
             List<File> outputList = getFilesFromProcess();
-
-
             if (outputList.size() == 2) {
                 moveFilesToOutputDirectory(outputList.get(0), outputList.get(1));
             }
-
             System.out.println("Done");
         }
         logUtils.generateNodeListReport("CUSTOM");
@@ -294,8 +275,40 @@ public class ViewController implements Initializable {
 
     }
 
+    private void setProcessMiningRunProperties() {
+        double nodeEqualScoreID = Double.valueOf(_nodeEqualScoreID.getText());
+        double nodeNotEqualScoreID = Double.valueOf(_nodeNotEqualScoreID.getText());
+        double nodeSemiEqualScoreID = Double.valueOf(_nodeSemiEqualScoreID.getText());
+        double edgeEqualScoreID = Double.valueOf(_edgeEqualScoreID.getText());
+        double edgeNotEqualScoreID = Double.valueOf(_edgeNotEqualScoreID.getText());
+        double edgeSemiEqualScoreID = Double.valueOf(_edgeSemiEqualScoreID.getText());
+        double gamma = Double.valueOf(_gammaID.getText());
+        int nGramID = Integer.valueOf(_nGramID.getText());
+
+        // Coi valori di default
+        ProcessMiningRunProperties processMiningRunProperties = new ProcessMiningRunProperties();
+
+        if (_changeScoreID.getValue().equals("Yes")) {
+            // Coi valori dell'utente
+            processMiningRunProperties = new ProcessMiningRunProperties(edgeEqualScoreID, edgeSemiEqualScoreID, edgeNotEqualScoreID, nodeEqualScoreID, nodeSemiEqualScoreID, nodeNotEqualScoreID, gamma, nGramID);
+        } else {
+            // Il gamma e gli n gram a prescindere sono dati in input
+            processMiningRunProperties.setGamma(gamma);
+            processMiningRunProperties.setGrams(nGramID);
+        }
+        logUtils.setProcessMiningRunProperties(processMiningRunProperties);
+    }
+
+    private static void checkNumerOfFilesAvailable(int size) {
+        if (size <= 2) {
+            System.out.println("Not enough Input XES Files found");
+            System.exit(99);
+        }
+    }
+
     /**
-     *  sposta i file vincitori nella cartella di output
+     * sposta i file vincitori nella cartella di output
+     *
      * @param winners
      * @param winners1
      */
@@ -312,7 +325,8 @@ public class ViewController implements Initializable {
     }
 
     /**
-     *  cancella i file smallOut non vincitori (max più basso)
+     * cancella i file smallOut non vincitori (max più basso)
+     *
      * @param outputList
      * @param winner
      * @return
@@ -336,6 +350,7 @@ public class ViewController implements Initializable {
 
     /**
      * seleziona il file smallOut con lo score più alto
+     *
      * @param outputList
      * @return
      * @throws IOException
@@ -364,7 +379,6 @@ public class ViewController implements Initializable {
     }
 
     /**
-     *
      * @param logUtils
      * @param scriptPath
      * @param currentPath
@@ -384,7 +398,6 @@ public class ViewController implements Initializable {
     }
 
     /**
-     *
      * @return
      */
     private List<File> getFilesFromProcess() {
@@ -404,7 +417,6 @@ public class ViewController implements Initializable {
     }
 
     /**
-     *
      * @param logUtils
      * @param cores
      * @param scriptPath
@@ -459,7 +471,6 @@ public class ViewController implements Initializable {
             Platform.exit();
         }
     }
-
 
 
 }

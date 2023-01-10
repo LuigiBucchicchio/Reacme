@@ -35,7 +35,7 @@ public class BatchAnalysis {
      * @throws InterruptedException
      * @author luigi.bucchicchioAtgmail.com
      */
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         System.console();
 
         //Cartella o cartella di cartelle?
@@ -125,7 +125,7 @@ public class BatchAnalysis {
      * @param c Punteggio tra un Arco/Transizone Repeating e lo stesso arco NotRepeating (es. 1.0 Uguali; 0.0 Diversi)
      * @author luigi.bucchicchioAtgmail.com
      */
-    private static void iteration(double a, double b, double c) {
+    private static void iteration(double a, double b, double c) throws Exception {
         LogUtilsRepeatingGraph log = new LogUtilsRepeatingGraph();
         log.setFileList(fileList);
         int x = fileList.length;
