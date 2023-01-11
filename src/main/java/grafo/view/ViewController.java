@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 
@@ -34,6 +35,8 @@ import static grafo.EnsembleRun.prepareForHeatMap;
 public class ViewController implements Initializable {
 
     @FXML
+    public TextArea _consoleOutput;
+    @FXML
     private Label _xesFiles;
     @FXML
     private TextField _gammaID;
@@ -55,6 +58,7 @@ public class ViewController implements Initializable {
     @FXML
     private TextField _nGramID;
 
+
     private final LogUtilsRepeatingGraph logUtils = new LogUtilsRepeatingGraph();
 
     private File _xesDirectory = new File("");
@@ -64,7 +68,14 @@ public class ViewController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         _changeScoreID.getItems().addAll("No", "Yes");
         _changeScoreID.setValue("No");
-
+        _consoleOutput.setEditable(false);
+        PrintStream out = new PrintStream(new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                _consoleOutput.appendText(String.valueOf((char) b));
+            }
+        });
+        System.setOut(out);
     }
 
     /**
@@ -303,7 +314,7 @@ public class ViewController implements Initializable {
         }
         logUtils.generateNodeListReport("CUSTOM");
         prepareForHeatMap();
-        closeApplication();
+        // closeApplication();
 
 
     }
@@ -311,16 +322,16 @@ public class ViewController implements Initializable {
     private void setProcessMiningRunProperties() {
         // Coi valori di default
         ProcessMiningRunProperties processMiningRunProperties = new ProcessMiningRunProperties();
-        double gamma = Double.valueOf(_gammaID.getText());
+        var gamma = Double.parseDouble(_gammaID.getText());
 
         if (_changeScoreID.getValue().equals("Yes")) {
-            double nodeEqualScoreID = Double.valueOf(_nodeEqualScoreID.getText());
-            double nodeNotEqualScoreID = Double.valueOf(_nodeNotEqualScoreID.getText());
-            double nodeSemiEqualScoreID = Double.valueOf(_nodeSemiEqualScoreID.getText());
-            double edgeEqualScoreID = Double.valueOf(_edgeEqualScoreID.getText());
-            double edgeNotEqualScoreID = Double.valueOf(_edgeNotEqualScoreID.getText());
-            double edgeSemiEqualScoreID = Double.valueOf(_edgeSemiEqualScoreID.getText());
-            int nGramID = Integer.valueOf(_nGramID.getText());
+            var nodeEqualScoreID = Double.parseDouble(_nodeEqualScoreID.getText());
+            var nodeNotEqualScoreID = Double.parseDouble(_nodeNotEqualScoreID.getText());
+            var nodeSemiEqualScoreID = Double.parseDouble(_nodeSemiEqualScoreID.getText());
+            var edgeEqualScoreID = Double.parseDouble(_edgeEqualScoreID.getText());
+            var edgeNotEqualScoreID = Double.parseDouble(_edgeNotEqualScoreID.getText());
+            var edgeSemiEqualScoreID = Double.parseDouble(_edgeSemiEqualScoreID.getText());
+            var nGramID = Integer.parseInt(_nGramID.getText());
             // Coi valori dell'utente
             processMiningRunProperties = new ProcessMiningRunProperties(edgeEqualScoreID, edgeSemiEqualScoreID, edgeNotEqualScoreID, nodeEqualScoreID, nodeSemiEqualScoreID, nodeNotEqualScoreID, gamma, nGramID);
         } else {

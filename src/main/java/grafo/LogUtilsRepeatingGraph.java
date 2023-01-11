@@ -3,6 +3,7 @@ package grafo;
 import com.opencsv.CSVWriter;
 import grafo.controller.TraceController;
 import grafo.model.ProcessMiningRunProperties;
+import javafx.concurrent.Task;
 import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
@@ -111,14 +112,8 @@ public class LogUtilsRepeatingGraph {
                 xlog.forEach(xTrace -> {
                     ArrayList<String> activitySequence = new ArrayList<>();
                     StringBuffer traceLine = new StringBuffer();
-                    xTrace.forEach(xEvent -> {
-                        String activity = xEvent.getAttributes().get("concept:name").toString();
-                        if (isTreCifre)
-                            activity = activity.substring(0, 3);
-                        traceLine.append(activity);
-                        activitySequence.add(activity);
-                    });
-
+                    xTrace.stream().map(xEvent -> xEvent.getAttributes().get("concept:name").toString()).forEach(activity ->
+                            addActivityToTraceLineAndSequence(activitySequence, traceLine, activity));
                     Trace genericTrace = new Trace();
                     genericTrace.setTraceLine(traceLine.toString());
                     genericTrace.setActivitySequence(activitySequence);
@@ -164,6 +159,13 @@ public class LogUtilsRepeatingGraph {
 
         }
         System.out.println("Traces analyzed");
+    }
+
+    private void addActivityToTraceLineAndSequence(ArrayList<String> activitySequence, StringBuffer traceLine, String activity) {
+        if (isTreCifre)
+            activity = activity.substring(0, 3);
+        traceLine.append(activity);
+        activitySequence.add(activity);
     }
 
     /**
@@ -299,6 +301,13 @@ public class LogUtilsRepeatingGraph {
 
         // Adding the Header with LOG files names
 
+        String[][] distanceMatrix = addHeaderWithLogFileNames();
+        distanceMatrix[0][0] = " ";
+        System.out.println("Ended generation of Distance Matrix");
+        return distanceMatrix;
+    }
+
+    private String[][] addHeaderWithLogFileNames() {
         String[][] distanceMatrix = new String[graphDissimilarity.length + 1][graphDissimilarity.length + 1];
 
         for (int i = 0; i < distanceMatrix.length; i++) {
@@ -322,8 +331,6 @@ public class LogUtilsRepeatingGraph {
                 }
             }
         }
-        distanceMatrix[0][0] = " ";
-        System.out.println("Ended generation of Distance Matrix");
         return distanceMatrix;
     }
 
@@ -955,6 +962,5 @@ public class LogUtilsRepeatingGraph {
     public void setTreCifre(boolean isTreCifre) {
         this.isTreCifre = isTreCifre;
     }
-
 
 }
