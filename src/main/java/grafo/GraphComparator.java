@@ -16,8 +16,7 @@ import java.util.List;
  */
 public class GraphComparator {
 
-    private ProcessMiningRunProperties processMiningRunProperties
-            = new ProcessMiningRunProperties();
+    private ProcessMiningRunProperties processMiningRunProperties = new ProcessMiningRunProperties();
 
     public double nodeScore = 0.00;
     public double edgeScore = 0.00;
@@ -47,57 +46,26 @@ public class GraphComparator {
     }
 
     public void generateNodeSuperset() {
+        extractNodesAndAddToNodeSuperSet(graph1.nodes().iterator());
+        extractNodesAndAddToNodeSuperSet(graph2.nodes().iterator());
+    }
 
-        Iterator<Node> Nit1 = graph1.nodes().iterator();
-        while (Nit1.hasNext()) {
-            Node n = Nit1.next();
-            boolean duplicate = false;
-            for (Node edges : nodeSuperSet) {
-                if (n.getId().equals(edges.getId()))
-                    duplicate = true;
-            }
-            if (!duplicate)
-                nodeSuperSet.add(n);
-        }
-
-        Iterator<Node> Nit2 = graph2.nodes().iterator();
-        while (Nit2.hasNext()) {
-            Node n = Nit2.next();
-            boolean duplicate = false;
-            for (Node edges : nodeSuperSet) {
-                if (n.getId().equals(edges.getId()))
-                    duplicate = true;
-            }
-            if (!duplicate)
-                nodeSuperSet.add(n);
-        }
-
+    private void extractNodesAndAddToNodeSuperSet(Iterator<Node> nodeIterator) {
+        nodeIterator.forEachRemaining((Node node) -> {
+            if (nodeSuperSet.stream().noneMatch(n -> n == node)) nodeSuperSet.add(node);
+        });
     }
 
     public void generateEdgeSuperset() {
-        Iterator<Edge> Eit1 = graph1.edges().iterator();
-        while (Eit1.hasNext()) {
-            Edge e = Eit1.next();
-            boolean duplicate = false;
-            for (Edge edge : edgeSuperSet) {
-                if (e.getId().equals(edge.getId()))
-                    duplicate = true;
-            }
-            if (!duplicate)
-                edgeSuperSet.add(e);
-        }
+        extractEdgesAndAddToEdgeSuperSet(graph1.edges().iterator());
+        extractEdgesAndAddToEdgeSuperSet(graph2.edges().iterator());
+    }
 
-        Iterator<Edge> Eit2 = graph2.edges().iterator();
-        while (Eit2.hasNext()) {
-            Edge e = Eit2.next();
-            boolean duplicate = false;
-            for (Edge edge : edgeSuperSet) {
-                if (e.getId().equals(edge.getId()))
-                    duplicate = true;
-            }
-            if (!duplicate)
-                edgeSuperSet.add(e);
-        }
+    private void extractEdgesAndAddToEdgeSuperSet(Iterator<Edge> edgeIterator) {
+        edgeIterator.forEachRemaining(edge -> {
+            if (edgeSuperSet.stream().noneMatch(e -> e == edge))
+                edgeSuperSet.add(edge);
+        });
     }
 
     public int getSizeNodeSuperSet() {
@@ -112,28 +80,19 @@ public class GraphComparator {
 
         for (Node n : nodeSuperSet) {
             if (graph1.getNode(n.getId()) == null) {
-
                 nodeScore = nodeScore + processMiningRunProperties.getNodeNotEqualScore();
-
             } else {
-
                 if (graph2.getNode(n.getId()) == null) {
-
                     nodeScore = nodeScore + processMiningRunProperties.getNodeNotEqualScore();
-
                 } else {
-
                     Node node1 = graph1.getNode(n.getId());
                     // t12
                     // t56
                     Node node2 = graph2.getNode(n.getId());
-
                     String string1 = (String) node1.getAttribute("ui.label");
                     String string2 = (String) node2.getAttribute("ui.label");
-
                     // t56
                     // R_t56
-
                     if (string1.equals(string2)) {
                         nodeScore = nodeScore + processMiningRunProperties.getNodeEqualScore();
                     } else {
@@ -153,7 +112,6 @@ public class GraphComparator {
                             System.out.println(string1 + " " + string2);
                             throw new IllegalArgumentException();
                         }
-
                     }
                 }
             }
@@ -194,8 +152,7 @@ public class GraphComparator {
                         } else {
                             if (label1.equals(label2))
                                 edgeScore = edgeScore + processMiningRunProperties.getEdgeEqualScore();
-                            else
-                                throw new IllegalArgumentException();
+                            else throw new IllegalArgumentException();
                         }
                     }
 
@@ -217,45 +174,16 @@ public class GraphComparator {
 
     private double getTotalEdgeScore(double negativeGamma) {
         double totalEdgeScore;
-        if (getSizeEdgeSuperSet() == 0)
-            totalEdgeScore = 0.0;
-        else
-            totalEdgeScore = (negativeGamma * this.edgeScore) / getSizeEdgeSuperSet();
+        if (getSizeEdgeSuperSet() == 0) totalEdgeScore = 0.0;
+        else totalEdgeScore = (negativeGamma * this.edgeScore) / getSizeEdgeSuperSet();
         return totalEdgeScore;
     }
 
     private double getTotalNodeScore(double gamma) {
         double totalNodeScore;
-        if (getSizeNodeSuperSet() == 0)
-            totalNodeScore = 0.0;
-        else
-            totalNodeScore = (gamma * this.nodeScore) / getSizeNodeSuperSet();
+        if (getSizeNodeSuperSet() == 0) totalNodeScore = 0.0;
+        else totalNodeScore = (gamma * this.nodeScore) / getSizeNodeSuperSet();
         return totalNodeScore;
-    }
-
-
-    public void setEdgeEqualScore(double edgeEqualScore) {
-        processMiningRunProperties.setEdgeEqualScore(edgeEqualScore);
-    }
-
-    public void setEdgeSemiScore(double edgeSemiScore) {
-        processMiningRunProperties.setEdgeSemiScore(edgeSemiScore);
-    }
-
-    public void setEdgeNotEqualScore(double edgeNotEqualScore) {
-        processMiningRunProperties.setEdgeNotEqualScore(edgeNotEqualScore);
-    }
-
-    public void setNodeEqualScore(double nodeEqualScore) {
-        processMiningRunProperties.setNodeEqualScore(nodeEqualScore);
-    }
-
-    public void setNodeSemiScore(double nodeSemiScore) {
-        processMiningRunProperties.setNodeSemiScore(nodeSemiScore);
-    }
-
-    public void setNodeNotEqualScore(double nodeNotEqualScore) {
-        processMiningRunProperties.setNodeNotEqualScore(nodeNotEqualScore);
     }
 
     public void setGamma(double gamma) {

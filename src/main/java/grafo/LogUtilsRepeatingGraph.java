@@ -107,30 +107,27 @@ public class LogUtilsRepeatingGraph {
 
             try {
                 XLog xlog = parseXES(file.getAbsolutePath());
-                //XLog xlog=parseXES("/home/cippus/Downloads/log (5).xes");
-                for (XTrace xTrace : xlog) {
+                int finalI = i;
+                xlog.forEach(xTrace -> {
                     ArrayList<String> activitySequence = new ArrayList<>();
                     StringBuffer traceLine = new StringBuffer();
-                    // activitySequence = [t11, t45, t63, t12, t113, t9]
-                    // traceLine = t11t45t63t12t113t9
-
-                    for (XEvent xevent : xTrace) {
-                        String activity = xevent.getAttributes().get("concept:name").toString();
+                    xTrace.forEach(xEvent -> {
+                        String activity = xEvent.getAttributes().get("concept:name").toString();
                         if (isTreCifre)
                             activity = activity.substring(0, 3);
                         traceLine.append(activity);
                         activitySequence.add(activity);
-                    }
+                    });
 
                     Trace genericTrace = new Trace();
                     genericTrace.setTraceLine(traceLine.toString());
                     genericTrace.setActivitySequence(activitySequence);
-                    genericTrace.setLogId(fileList[i].getName());
+                    genericTrace.setLogId(fileList[finalI].getName());
                     genericTrace.setTraceId(xTrace.getAttributes().get("concept:name").toString());
                     traceList.add(genericTrace);
                     genericTrace.setGrams(TraceController.generateGrams(nGram, genericTrace.getActivitySequence()));
                     //analyzer.setTrace(traceLine.toString());
-                }
+                });
 
                 GraphLogAnalyzer analyzer = new GraphLogAnalyzer();
                 analyzer.setTraceSet(traceList);

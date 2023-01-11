@@ -6,14 +6,14 @@ import static grafo.model.DefaultProperties.*;
  * Questa classe rappresenta un contenitore dei parametri utilizzati generalmente nell'algoritmo
  * di process mining. Infatti in essa si possono trovare i seguenti parametri:
  * <ul>
- *     <li><code>edgeEqualScore</code> di default, il valore sta a <code>1</code></li>
- *     <li><code>edgeSemiEqualScore</code> di default, il valore sta a <code>0</code></li>
- *     <li><code>edgeNotEqualScore</code> di default, il valore sta a <code>0</code></li>
- *     <li><code>nodeEqualScore</code> di default, il valore sta a <code>1</code></li>
- *     <li><code>nodeSemiEqualScore</code> di default, il valore sta a <code>0</code></li>
- *     <li><code>nodeNotEqualsScore</code> di default, il valore sta a <code>0</code></li>
- *     <li><code>gamma</code> di default, il valore sta a <code>0</code></li>
- *     <li><code>grams</code> di default, il valore sta a <code>3</code></li>
+ *     <li><code>edgeEqualScore</code> - di default, il valore sta a <code>1</code></li>
+ *     <li><code>edgeSemiEqualScore</code> - di default, il valore sta a <code>0</code></li>
+ *     <li><code>edgeNotEqualScore</code> - di default, il valore sta a <code>0</code></li>
+ *     <li><code>nodeEqualScore</code> - di default, il valore sta a <code>1</code></li>
+ *     <li><code>nodeSemiEqualScore</code> - di default, il valore sta a <code>0</code></li>
+ *     <li><code>nodeNotEqualsScore</code> - di default, il valore sta a <code>0</code></li>
+ *     <li><code>gamma</code> - di default, il valore sta a <code>0</code></li>
+ *     <li><code>grams</code> - di default, il valore sta a <code>3</code></li>
  * </ul>
  *
  * @see DefaultProperties
