@@ -58,7 +58,6 @@ public class LogUtilsRepeatingGraph {
     private ProcessMiningRunProperties processMiningRunProperties
             = new ProcessMiningRunProperties();
 
-    //scores
     public void setProcessMiningRunProperties(ProcessMiningRunProperties processMiningRunProperties) {
         this.processMiningRunProperties = processMiningRunProperties;
     }

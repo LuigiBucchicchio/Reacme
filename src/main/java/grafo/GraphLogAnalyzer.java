@@ -24,8 +24,8 @@ public class GraphLogAnalyzer {
     private List<Trace> traceSet = new ArrayList<Trace>();
     private Graph graph;
     boolean firstTime = true;
-    private Set<String> nodeIdSuperSet = new TreeSet<String>();
-    private Set<String> edgeIdSuperSet = new TreeSet<String>();
+    private Set<String> nodeIdSuperSet = new TreeSet<>();
+    private Set<String> edgeIdSuperSet = new TreeSet<>();
 
     private Set<String> nodeIdSet;
     private Set<String> edgeIdSet;

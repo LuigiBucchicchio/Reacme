@@ -24,6 +24,11 @@ import java.util.*;
 
 import static grafo.EnsembleRun.prepareForHeatMap;
 
+/**
+ * TODO: - Controllare la directory di input, se non è corretta (ovvero non contiene almeno 2 file .xes / tutti i file
+ *      nella cartella devono esser di tipo .xes)
+ *       -
+ */
 public class ViewController implements Initializable {
 
     @FXML
@@ -276,25 +281,23 @@ public class ViewController implements Initializable {
     }
 
     private void setProcessMiningRunProperties() {
-        double nodeEqualScoreID = Double.valueOf(_nodeEqualScoreID.getText());
-        double nodeNotEqualScoreID = Double.valueOf(_nodeNotEqualScoreID.getText());
-        double nodeSemiEqualScoreID = Double.valueOf(_nodeSemiEqualScoreID.getText());
-        double edgeEqualScoreID = Double.valueOf(_edgeEqualScoreID.getText());
-        double edgeNotEqualScoreID = Double.valueOf(_edgeNotEqualScoreID.getText());
-        double edgeSemiEqualScoreID = Double.valueOf(_edgeSemiEqualScoreID.getText());
-        double gamma = Double.valueOf(_gammaID.getText());
-        int nGramID = Integer.valueOf(_nGramID.getText());
-
         // Coi valori di default
         ProcessMiningRunProperties processMiningRunProperties = new ProcessMiningRunProperties();
+        double gamma = Double.valueOf(_gammaID.getText());
 
         if (_changeScoreID.getValue().equals("Yes")) {
+            double nodeEqualScoreID = Double.valueOf(_nodeEqualScoreID.getText());
+            double nodeNotEqualScoreID = Double.valueOf(_nodeNotEqualScoreID.getText());
+            double nodeSemiEqualScoreID = Double.valueOf(_nodeSemiEqualScoreID.getText());
+            double edgeEqualScoreID = Double.valueOf(_edgeEqualScoreID.getText());
+            double edgeNotEqualScoreID = Double.valueOf(_edgeNotEqualScoreID.getText());
+            double edgeSemiEqualScoreID = Double.valueOf(_edgeSemiEqualScoreID.getText());
+            int nGramID = Integer.valueOf(_nGramID.getText());
             // Coi valori dell'utente
             processMiningRunProperties = new ProcessMiningRunProperties(edgeEqualScoreID, edgeSemiEqualScoreID, edgeNotEqualScoreID, nodeEqualScoreID, nodeSemiEqualScoreID, nodeNotEqualScoreID, gamma, nGramID);
         } else {
             // Il gamma e gli n gram a prescindere sono dati in input
             processMiningRunProperties.setGamma(gamma);
-            processMiningRunProperties.setGrams(nGramID);
         }
         logUtils.setProcessMiningRunProperties(processMiningRunProperties);
     }
