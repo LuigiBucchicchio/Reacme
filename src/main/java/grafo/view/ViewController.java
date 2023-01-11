@@ -67,7 +67,13 @@ public class ViewController implements Initializable {
 
     }
 
-
+    /**
+     * Controlla se dentro la cartella di input ci sono file xes
+     * @param path
+     * @param xesExtension
+     * @return
+     * @throws IOException
+     */
     public static List<Path> checkExtension(Path path, String xesExtension) throws IOException {
         List<Path> result = null;
         try (Stream<Path> files = Files.walk(path)) {
