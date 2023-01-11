@@ -69,19 +69,18 @@ public class ViewController implements Initializable {
 
     /**
      * Controlla se dentro la cartella di input ci sono file xes
+     *
      * @param path
-     * @param xesExtension
      * @return
-     * @throws IOException
      */
-    public static List<Path> checkExtension(Path path, String xesExtension) throws IOException {
+    public static List<Path> checkExtension(Path path, String xesExtension) {
         List<Path> result = null;
         try (Stream<Path> files = Files.walk(path)) {
             result = files
                     .filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(xesExtension))
                     .collect(Collectors.toList());
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return result;
@@ -97,10 +96,10 @@ public class ViewController implements Initializable {
         directoryChooser.setInitialDirectory(new java.io.File("."));
         _xesDirectory = directoryChooser.showDialog(null);
         List<Path> allXesFiles = checkExtension(Paths.get(_xesDirectory.getAbsolutePath()), ".xes");
-        if(allXesFiles.size() <= 2 && allXesFiles.size() == 0){
+        if (allXesFiles.size() <= 2 && allXesFiles.size() == 0) {
             System.out.println("Not enough Input XES Files found");
             System.exit(99);
-        }else{
+        } else {
             _xesFiles.setText(_xesDirectory.getAbsolutePath());
         }
 
