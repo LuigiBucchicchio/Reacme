@@ -21,6 +21,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static grafo.EnsembleRun.prepareForHeatMap;
 
@@ -65,16 +67,37 @@ public class ViewController implements Initializable {
 
     }
 
+
+    public static List<Path> checkExtension(Path path, String xesExtension) throws IOException {
+        List<Path> result = null;
+        try (Stream<Path> files = Files.walk(path)) {
+            result = files
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(xesExtension))
+                    .collect(Collectors.toList());
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     /* REMINDER --> QUESTA ANNOTAZIONE, PERMETTE DI IGNORARE GLI WARNINGS. IN QUESTO CASO ESSI SONO RELATIVI AL
      *          Dereference of '_xesDirectory.listFiles()' may produce 'NullPointerException'
      */
     @SuppressWarnings("ConstantConditions")
-    public void loadDirectory() {
+    public void loadDirectory() throws IOException {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select XES Files Directory");
         directoryChooser.setInitialDirectory(new java.io.File("."));
         _xesDirectory = directoryChooser.showDialog(null);
-        _xesFiles.setText(_xesDirectory.listFiles().length == 0 ? "No files found" : "Files found: " + _xesDirectory.listFiles().length);
+        List<Path> allXesFiles = checkExtension(Paths.get(_xesDirectory.getAbsolutePath()), ".xes");
+        if(allXesFiles.size() <= 2 && allXesFiles.size() == 0){
+            System.out.println("Not enough Input XES Files found");
+            System.exit(99);
+        }else{
+            _xesFiles.setText(_xesDirectory.getAbsolutePath());
+        }
+
     }
 
     public void changeScore() {
