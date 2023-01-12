@@ -116,4 +116,18 @@ public class ProcessMiningRunProperties {
     public void setGrams(int grams) {
         this.grams = grams;
     }
+
+    @Override
+    public String toString() {
+        return "ProcessMiningRunProperties{" +
+                "edgeEqualScore=" + edgeEqualScore +
+                ", edgeSemiEqualScore=" + edgeSemiEqualScore +
+                ", edgeNotEqualScore=" + edgeNotEqualScore +
+                ", nodeEqualScore=" + nodeEqualScore +
+                ", nodeSemiEqualScore=" + nodeSemiEqualScore +
+                ", nodeNotEqualScore=" + nodeNotEqualScore +
+                ", gamma=" + gamma +
+                ", grams=" + grams +
+                '}';
+    }
 }

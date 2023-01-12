@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="all" name="MyApp" packages="">
+    <Appenders>
+        <File name="FileAppender" fileName="logs/execution-${date:yyyyMMdd_HH_mm}.log">
+            <PatternLayout>
+                <Pattern>%d{yyyy/MM/dd HH:mm:ss} [%-6p] %c{1} - %m%n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="all" additivity="false">
+            <AppenderRef ref="FileAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>

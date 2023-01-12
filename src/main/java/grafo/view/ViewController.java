@@ -12,6 +12,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.io.*;
@@ -27,12 +29,9 @@ import java.util.stream.Stream;
 
 import static grafo.EnsembleRun.prepareForHeatMap;
 
-/**
- * TODO: - Controllare la directory di input, se non è corretta (ovvero non contiene almeno 2 file .xes / tutti i file
- *      nella cartella devono esser di tipo .xes)
- *       -
- */
 public class ViewController implements Initializable {
+
+    private static final Logger logger = LogManager.getLogger(Main.class);
 
     @FXML
     public TextArea _consoleOutput;
@@ -63,6 +62,7 @@ public class ViewController implements Initializable {
 
     private File _xesDirectory = new File("");
     private final File outputDir = new File("./output/");
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -105,12 +105,17 @@ public class ViewController implements Initializable {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select XES Files Directory");
         directoryChooser.setInitialDirectory(new java.io.File("."));
+
         _xesDirectory = directoryChooser.showDialog(null);
+
+
+
         List<Path> allXesFiles = checkExtension(Paths.get(_xesDirectory.getAbsolutePath()), ".xes");
-        if (allXesFiles.size() <= 2 && allXesFiles.size() == 0) {
-            System.out.println("Not enough Input XES Files found");
+        if (allXesFiles.size() <= 2) {
+            logger.fatal("The .xes files aren't enough!");
             System.exit(99);
         } else {
+            logger.info("Loaded directory {}", _xesDirectory.toString());
             _xesFiles.setText(_xesDirectory.getAbsolutePath());
         }
 
@@ -139,6 +144,7 @@ public class ViewController implements Initializable {
     private void resetOutputDir() {
         try {
             if (!isOutputDirEmpty()) {
+                logger.info("Deleting /output directory");
                 deleteFiles();
             }
         } catch (IOException e) {
@@ -260,6 +266,7 @@ public class ViewController implements Initializable {
      * Si può dire che è la copia del metodo main di EnsembleRun
      */
     private void startMining() throws Exception {
+        logger.info("Starting the process mining algorithm");
         long startingTime = System.currentTimeMillis();
         Locale.setDefault(Locale.US);
         System.out.println("Log evaluation start");
@@ -267,18 +274,22 @@ public class ViewController implements Initializable {
         logUtils.setFileList(_xesDirectory.listFiles());
         int size = _xesDirectory.listFiles().length;
 
-        checkNumerOfFilesAvailable(size);
-
         logUtils.setTraceNum(new int[size]);
         logUtils.setAvgTraceLen(new double[size]);
         logUtils.setScoreChange(true);
         logUtils.setTreCifre(false);
 
         setProcessMiningRunProperties();
-
+        logger.info("Starting Analyzing Traces");
         logUtils.analyzeTraces();
+        logger.info("Ended Analyzing Traces");
+        logger.info("Starting the Generation of Distance Matrix");
         String[][] distanceMatrix = logUtils.generateDistanceMatrix();
+        logger.info("Ended the Generation of Distance Matrix");
+        logger.info("Starting conversion of matrix into CSV file");
         logUtils.convertToCSV(distanceMatrix);
+        logger.info("Ended conversion of matrix into CSV file");
+
 
         System.out.println("Evaluation Terminated - Execution Time:" + (System.currentTimeMillis() - startingTime));
         // Multi-threading
@@ -291,6 +302,7 @@ public class ViewController implements Initializable {
         String currentPath = currentDirectory.getAbsolutePath();
         currentPath = currentPath.replace('\\', '/');
         if (cores > 1 && ((logUtils.getFileList().length - 2) > (cores * 2))) {
+            logger.info("Starting Clustering Algorithm with multiple cores");
             System.out.println("Clustering Algorithm start");
             runProcessMultiCores(logUtils, cores, scriptPath, currentPath);
             System.out.println("\nClustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
@@ -299,8 +311,10 @@ public class ViewController implements Initializable {
             File winner = selectWinnerFile(outputList);
             File[] winners = deleteLosersFiles(outputList, winner);
             moveFilesToOutputDirectory(winners[0], winners[1]);
+            logger.info("Ended Clustering Algorithm");
             System.out.println("Done");
         } else {
+            logger.info("Starting Clustering Algorithm with single core");
             System.out.println("Clustering Algorithm start");
             runProcessSingleCore(logUtils, scriptPath, currentPath);
             System.out.println("Clustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
@@ -310,6 +324,7 @@ public class ViewController implements Initializable {
             if (outputList.size() == 2) {
                 moveFilesToOutputDirectory(outputList.get(0), outputList.get(1));
             }
+            logger.info("Ended Clustering Algorithm");
             System.out.println("Done");
         }
         logUtils.generateNodeListReport("CUSTOM");
@@ -338,6 +353,7 @@ public class ViewController implements Initializable {
             // Il gamma e gli n gram a prescindere sono dati in input
             processMiningRunProperties.setGamma(gamma);
         }
+        logger.info("Setting the following properties for mining {}", processMiningRunProperties);
         logUtils.setProcessMiningRunProperties(processMiningRunProperties);
     }
 
@@ -502,6 +518,7 @@ public class ViewController implements Initializable {
     }
 
     public void closeApplication() throws IOException {
+        logger.info("Closing Application");
         if (isOutputDirEmpty()) {
             Platform.exit();
         } else {
