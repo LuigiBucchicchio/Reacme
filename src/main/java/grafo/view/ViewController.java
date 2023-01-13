@@ -78,12 +78,6 @@ public class ViewController implements Initializable {
         System.setOut(out);
     }
 
-    /**
-     * Controlla se dentro la cartella di input ci sono file xes
-     *
-     * @param path
-     * @return
-     */
     public static List<Path> checkExtension(Path path, String xesExtension) {
         List<Path> result = null;
         try (Stream<Path> files = Files.walk(path)) {
@@ -107,7 +101,6 @@ public class ViewController implements Initializable {
         directoryChooser.setInitialDirectory(new java.io.File("."));
 
         _xesDirectory = directoryChooser.showDialog(null);
-
 
 
         List<Path> allXesFiles = checkExtension(Paths.get(_xesDirectory.getAbsolutePath()), ".xes");
@@ -144,8 +137,8 @@ public class ViewController implements Initializable {
     private void resetOutputDir() {
         try {
             if (!isOutputDirEmpty()) {
-                logger.info("Deleting /output directory");
                 deleteFiles();
+                logger.debug("Found and deleted /output directory");
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -280,12 +273,19 @@ public class ViewController implements Initializable {
         logUtils.setTreCifre(false);
 
         setProcessMiningRunProperties();
+
         logger.info("Starting Analyzing Traces");
         logUtils.analyzeTraces();
         logger.info("Ended Analyzing Traces");
+
+        logger.info("Starting generation of dictionaries");
+        logUtils.applyGramsToLogs(logUtils.getProcessMiningRunProperties().getGrams());
+        logger.info("Ended generation of dictionaries");
+
         logger.info("Starting the Generation of Distance Matrix");
         String[][] distanceMatrix = logUtils.generateDistanceMatrix();
         logger.info("Ended the Generation of Distance Matrix");
+
         logger.info("Starting conversion of matrix into CSV file");
         logUtils.convertToCSV(distanceMatrix);
         logger.info("Ended conversion of matrix into CSV file");

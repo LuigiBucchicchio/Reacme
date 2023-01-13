@@ -2,12 +2,10 @@ package grafo;
 
 import com.opencsv.CSVWriter;
 import grafo.controller.TraceController;
+import grafo.model.LogData;
 import grafo.model.ProcessMiningRunProperties;
-import javafx.concurrent.Task;
 import org.deckfour.xes.in.XesXmlParser;
-import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
-import org.deckfour.xes.model.XTrace;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 
@@ -59,17 +57,20 @@ public class LogUtilsRepeatingGraph {
     private ProcessMiningRunProperties processMiningRunProperties
             = new ProcessMiningRunProperties();
 
+    public LogUtilsRepeatingGraph() {
+    }
+
     public void setProcessMiningRunProperties(ProcessMiningRunProperties processMiningRunProperties) {
         this.processMiningRunProperties = processMiningRunProperties;
     }
 
     private boolean scoreChange = false;
 
-    private int nGram = 2;
-
     private boolean isTreCifre = false;
 
     static double startingTime;
+
+    private List<LogData> analyzedLogs;
 
     /**
      * XES parser
@@ -100,7 +101,7 @@ public class LogUtilsRepeatingGraph {
     public void analyzeTraces() {
         System.out.println("Starting to analyze traces");
         startingTime = System.currentTimeMillis();
-
+        analyzedLogs = new LinkedList<>();
         for (int i = 0; i < fileList.length; i++) {
             File file = fileList[i];
 
@@ -110,40 +111,29 @@ public class LogUtilsRepeatingGraph {
                 XLog xlog = parseXES(file.getAbsolutePath());
                 int finalI = i;
                 xlog.forEach(xTrace -> {
+
                     ArrayList<String> activitySequence = new ArrayList<>();
                     StringBuffer traceLine = new StringBuffer();
                     xTrace.stream().map(xEvent -> xEvent.getAttributes().get("concept:name").toString()).forEach(activity ->
                             addActivityToTraceLineAndSequence(activitySequence, traceLine, activity));
+
                     Trace genericTrace = new Trace();
                     genericTrace.setTraceLine(traceLine.toString());
                     genericTrace.setActivitySequence(activitySequence);
+
                     genericTrace.setLogId(fileList[finalI].getName());
                     genericTrace.setTraceId(xTrace.getAttributes().get("concept:name").toString());
                     traceList.add(genericTrace);
-                    genericTrace.setGrams(TraceController.generateGrams(nGram, genericTrace.getActivitySequence()));
-                    //analyzer.setTrace(traceLine.toString());
+
                 });
+
+                analyzedLogs.add(new LogData(fileList[finalI].getName(), traceList));
 
                 GraphLogAnalyzer analyzer = new GraphLogAnalyzer();
                 analyzer.setTraceSet(traceList);
                 analyzer.LogAnalyze();
                 graphList.add(analyzer.getGraph());
 
-
-                // Useful Info, can be used in combo with "consoleOutToFile()" (see main comment)
-
-//				System.out.println("--------------------------- Node list of log graph:"+fileList[i].getName()+""
-//						+ "---------------------------");
-//				analyzer.printNodeSet();
-//				System.out.println("--------------------------- Edge list of log graph:"+fileList[i].getName()+""
-//						+ "---------------------------");
-//				analyzer.printEdgeSet();
-//				System.out.println("---------------------------"
-//						+ "---------------------------\n");
-
-                // GraphImage has Heavy RAM usage-> (use with nested folder + batch).equals("YOUR PC GOT NUKED") returned "true".
-
-//				analyzer.GraphImage("Log "+fileList[i].getName()+" graph");
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -157,8 +147,31 @@ public class LogUtilsRepeatingGraph {
             getAvgTraceLen()[i] = (double) tot / numeroTracce;
             getTraceNum()[i] = numeroTracce;
 
+            printToFileToSeeNGrams(traceList);
         }
+
         System.out.println("Traces analyzed");
+    }
+
+    public void applyGramsToLogs(int grams) {
+        analyzedLogs.forEach(logData -> logData.generateDictionaryByValue(processMiningRunProperties.getGrams()));
+    }
+
+    public ProcessMiningRunProperties getProcessMiningRunProperties() {
+        return processMiningRunProperties;
+    }
+
+    private void printToFileToSeeNGrams(List<Trace> traceList) {
+        PrintStream originalStream = System.out;
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream("ngrams.txt");
+            PrintStream ps = new PrintStream(fileOutputStream);
+            System.setOut(ps);
+            System.out.println(TraceController.printDictionary());
+            System.setOut(originalStream);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void addActivityToTraceLineAndSequence(ArrayList<String> activitySequence, StringBuffer traceLine, String activity) {
@@ -400,224 +413,6 @@ public class LogUtilsRepeatingGraph {
 
     }
 
-//private class Change implements ChangeListener {
-//	private int sliderNumber=0;
-//	
-//	private Change(int x) {
-//		this.sliderNumber=x;
-//	}
-//	
-//	private Change() {
-//	}
-//	
-//	public void stateChanged(ChangeEvent e) {
-//	    JSlider source = (JSlider)e.getSource();
-//	    if (!source.getValueIsAdjusting()) {
-//	        int x = (int)source.getValue();
-//	        if(sliderNumber==0)
-//	        LogUtilsRepeatingGraph.slider=x;
-//	        else if (sliderNumber==1)
-//	        LogUtilsRepeatingGraph.slider1=x;
-//	        else if (sliderNumber==2)
-//		        LogUtilsRepeatingGraph.slider2=x;
-//	        else if (sliderNumber==3)
-//		        LogUtilsRepeatingGraph.slider3=x;
-//	        else if (sliderNumber==4)
-//		        LogUtilsRepeatingGraph.slider4=x;
-//	        else if (sliderNumber==5)
-//		        LogUtilsRepeatingGraph.slider5=x;
-//	        else if (sliderNumber==6)
-//		        LogUtilsRepeatingGraph.slider6=x;
-//	    }
-//	}
-//}
-//
-//private class ButtonListener implements ActionListener {
-//	
-//	JPanel panel;
-//	JFrame frame;
-//	
-//	private ButtonListener(JPanel panel,JFrame frame){
-//		this.panel=panel;
-//		this.frame=frame;
-//	}
-//
-//	@Override
-//	public void actionPerformed(ActionEvent e) {
-//		panel = new JPanel();
-//		panel.setVisible(false);
-//		frame.setVisible(false);
-//	}
-//}
-
-//public void visualStartMenu() throws InterruptedException {
-//
-//	JPanel panel = new JPanel();
-//	JFrame frame = new JFrame();
-//	panel.setPreferredSize(new Dimension(500,500));
-//	panel.setVisible(false);
-//	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//	frame.add(panel);
-//	frame.pack();
-//	frame.setLocationRelativeTo(null);
-//	frame.setVisible(false);
-//
-//	String[] options = {"Yes","No"};
-//	int n = JOptionPane.showOptionDialog(frame,
-//			"Would you like to change the gamma value?",
-//			"Gamma Value",
-//			JOptionPane.YES_NO_OPTION,
-//			JOptionPane.QUESTION_MESSAGE,
-//			null,     //do not use a custom Icon
-//			options,  //the titles of buttons
-//			options[0]); //default button title
-//
-//	if(n==JOptionPane.YES_OPTION) {
-//		panel.setVisible(true);
-//		frame.setVisible(true);
-//
-//		final int GAMMA_MIN = 0;
-//		final int GAMMA_MAX = 100;
-//		final int GAMMA_INIT = 0;
-//		JSlider gammaSlider = new JSlider(JSlider.HORIZONTAL,
-//				GAMMA_MIN, GAMMA_MAX, GAMMA_INIT);
-//		gammaSlider.addChangeListener(new Change());
-//		//Turn on labels at major tick marks.
-//		gammaSlider.setMajorTickSpacing(10);
-//		gammaSlider.setMinorTickSpacing(10);
-//		gammaSlider.setPaintTicks(true);
-//		gammaSlider.setPaintLabels(true);
-//		gammaSlider.setPreferredSize(new Dimension(200,150));
-//		panel.add(gammaSlider);
-//		JButton button = new JButton("OK");
-//		button.setVisible(true);
-//		panel.add(button);
-//		frame.pack();
-//		button.addActionListener(new ButtonListener(panel,frame));
-//
-//		while(frame.isVisible()) {
-//			Thread.sleep(1000);
-//		}
-//
-//		this.gamma = slider/100;
-//	}
-//
-//	frame.dispose();
-//	panel = new JPanel();
-//	frame = new JFrame();
-//	panel.setPreferredSize(new Dimension(500,800));
-//	panel.setVisible(false);
-//	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//	frame.add(panel);
-//	frame.pack();
-//	frame.setLocationRelativeTo(null);
-//	frame.setVisible(false);
-//
-//	n = JOptionPane.showOptionDialog(frame,
-//			"Would you like to change the scores?",
-//			"Change scores",
-//			JOptionPane.YES_NO_OPTION,
-//			JOptionPane.QUESTION_MESSAGE,
-//			null,     //do not use a custom Icon
-//			options,  //the titles of buttons
-//			options[0]); //default button title
-//
-//	if(n==JOptionPane.YES_OPTION) {
-//		this.scoreChange=true;
-//
-//		panel.setPreferredSize(new Dimension(500,800));
-//		panel.setVisible(true);
-//		frame.setVisible(true);
-//
-//		final int SCORE_MIN = 0;
-//		final int SCORE_MAX = 100;
-//		final int SCORE_INIT = 0;
-//		JSlider n_eqSlider = new JSlider(JSlider.HORIZONTAL,
-//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
-//		n_eqSlider.addChangeListener(new Change(1));
-//		//Turn on labels at major tick marks.
-//		n_eqSlider.setMajorTickSpacing(10);
-//		n_eqSlider.setMinorTickSpacing(10);
-//		n_eqSlider.setPaintTicks(true);
-//		n_eqSlider.setPaintLabels(true);
-//		n_eqSlider.setPreferredSize(new Dimension(200,50));
-//		JSlider n_neqSlider = new JSlider(JSlider.HORIZONTAL,
-//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
-//		n_neqSlider.addChangeListener(new Change(2));
-//		//Turn on labels at major tick marks.
-//		n_neqSlider.setMajorTickSpacing(10);
-//		n_neqSlider.setMinorTickSpacing(10);
-//		n_neqSlider.setPaintTicks(true);
-//		n_neqSlider.setPaintLabels(true);
-//		n_neqSlider.setPreferredSize(new Dimension(200,50));
-//		JSlider n_seqSlider = new JSlider(JSlider.HORIZONTAL,
-//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
-//		n_seqSlider.addChangeListener(new Change(3));
-//		//Turn on labels at major tick marks.
-//		n_seqSlider.setMajorTickSpacing(10);
-//		n_seqSlider.setMinorTickSpacing(10);
-//		n_seqSlider.setPaintTicks(true);
-//		n_seqSlider.setPaintLabels(true);
-//		n_seqSlider.setPreferredSize(new Dimension(200,50));
-//		JSlider e_eqSlider = new JSlider(JSlider.HORIZONTAL,
-//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
-//		e_eqSlider.addChangeListener(new Change(4));
-//		//Turn on labels at major tick marks.
-//		e_eqSlider.setMajorTickSpacing(10);
-//		e_eqSlider.setMinorTickSpacing(10);
-//		e_eqSlider.setPaintTicks(true);
-//		e_eqSlider.setPaintLabels(true);
-//		e_eqSlider.setPreferredSize(new Dimension(200,50));
-//		JSlider e_neqSlider = new JSlider(JSlider.HORIZONTAL,
-//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
-//		e_neqSlider.addChangeListener(new Change(5));
-//		//Turn on labels at major tick marks.
-//		e_neqSlider.setMajorTickSpacing(10);
-//		e_neqSlider.setMinorTickSpacing(10);
-//		e_neqSlider.setPaintTicks(true);
-//		e_neqSlider.setPaintLabels(true);
-//		e_neqSlider.setPreferredSize(new Dimension(200,50));
-//		JSlider e_seqSlider = new JSlider(JSlider.HORIZONTAL,
-//				SCORE_MIN, SCORE_MAX, SCORE_INIT);
-//		e_seqSlider.addChangeListener(new Change(6));
-//		//Turn on labels at major tick marks.
-//		e_seqSlider.setMajorTickSpacing(10);
-//		e_seqSlider.setMinorTickSpacing(10);
-//		e_seqSlider.setPaintTicks(true);
-//		e_seqSlider.setPaintLabels(true);
-//		e_seqSlider.setPreferredSize(new Dimension(200,50));
-//
-//		JButton button = new JButton("OK");
-//		button.addActionListener(new ButtonListener(panel,frame));
-//
-//
-//		panel.add(n_eqSlider);
-//		panel.add(n_neqSlider);
-//		panel.add(n_seqSlider);
-//		panel.add(e_eqSlider);
-//		panel.add(e_neqSlider);
-//		panel.add(e_seqSlider);
-//		panel.add(button);
-//		panel.setVisible(true);
-//		frame.pack();
-//		button.setVisible(true);
-//
-//		while(frame.isVisible()) {
-//			Thread.sleep(1000);
-//		}
-//
-//		this.nodeEqualScore = slider1/100;
-//		this.nodeNotEqualScore = slider2/100;
-//		this.nodeSemiScore= slider3/100;
-//		this.edgeEqualScore = slider4/100;
-//		this.edgeNotEqualScore = slider5/100;
-//		this.edgeSemiScore = slider6/100;
-//	}
-//
-//	frame.dispose();
-//
-//}
-
     /**
      * L'algoritmo esegue: Clicca per dettagli <br>
      * selectFolder() per prendere la cartella degli XES <br>
@@ -816,9 +611,6 @@ public class LogUtilsRepeatingGraph {
         processMiningRunProperties.setGamma(gamma);
     }
 
-    public void setnGram(int nGram) {
-        this.nGram = nGram;
-    }
 
     public double getStartingTime() {
         return startingTime;

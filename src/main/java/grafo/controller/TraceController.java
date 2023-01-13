@@ -32,4 +32,14 @@ public class TraceController {
             dictionary.put(x, 1);
         }
     }
+
+    /**
+     * This method prints me the dictionary and show me the grams and the number of occurrences
+     * of each gram and returns the dictionary as a String
+     */
+    public static String printDictionary() {
+        StringBuilder sb = new StringBuilder();
+        dictionary.forEach((k, v) -> sb.append(k).append(" -> ").append(v).append(" occurrences ").append(" - "));
+        return sb.toString();
+    }
 }
