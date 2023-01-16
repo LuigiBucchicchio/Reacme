@@ -115,6 +115,7 @@
 	</trace>
 	<trace>
 		<string key="concept:name" value="trace 3"/>
+
 		<event>
 			<string key="concept:name" value="t11"/>
 		</event>

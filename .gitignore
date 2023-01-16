@@ -1,1 +1,6 @@
 /target/
+
+# Ignore the output directory
+/output/
+/logs/
+/input2/
