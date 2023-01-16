@@ -12,8 +12,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.io.*;
@@ -31,7 +29,6 @@ import static grafo.EnsembleRun.prepareForHeatMap;
 
 public class ViewController implements Initializable {
 
-    private static final Logger logger = LogManager.getLogger(Main.class);
 
     @FXML
     public TextArea _consoleOutput;
@@ -105,10 +102,8 @@ public class ViewController implements Initializable {
 
         List<Path> allXesFiles = checkExtension(Paths.get(_xesDirectory.getAbsolutePath()), ".xes");
         if (allXesFiles.size() <= 2) {
-            logger.fatal("The .xes files aren't enough!");
             System.exit(99);
         } else {
-            logger.info("Loaded directory {}", _xesDirectory.toString());
             _xesFiles.setText(_xesDirectory.getAbsolutePath());
         }
 
@@ -138,7 +133,6 @@ public class ViewController implements Initializable {
         try {
             if (!isOutputDirEmpty()) {
                 deleteFiles();
-                logger.debug("Found and deleted /output directory");
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -254,12 +248,7 @@ public class ViewController implements Initializable {
         }
     }
 
-    /**
-     * Questo metodo permette di avviare il process mining.
-     * Si può dire che è la copia del metodo main di EnsembleRun
-     */
     private void startMining() throws Exception {
-        logger.info("Starting the process mining algorithm");
         long startingTime = System.currentTimeMillis();
         Locale.setDefault(Locale.US);
         System.out.println("Log evaluation start");
@@ -274,21 +263,13 @@ public class ViewController implements Initializable {
 
         setProcessMiningRunProperties();
 
-        logger.info("Starting Analyzing Traces");
         logUtils.analyzeTraces();
-        logger.info("Ended Analyzing Traces");
 
-        logger.info("Starting generation of dictionaries");
         logUtils.applyGramsToLogs(logUtils.getProcessMiningRunProperties().getGrams());
-        logger.info("Ended generation of dictionaries");
 
-        logger.info("Starting the Generation of Distance Matrix");
         String[][] distanceMatrix = logUtils.generateDistanceMatrix();
-        logger.info("Ended the Generation of Distance Matrix");
 
-        logger.info("Starting conversion of matrix into CSV file");
         logUtils.convertToCSV(distanceMatrix);
-        logger.info("Ended conversion of matrix into CSV file");
 
 
         System.out.println("Evaluation Terminated - Execution Time:" + (System.currentTimeMillis() - startingTime));
@@ -302,7 +283,6 @@ public class ViewController implements Initializable {
         String currentPath = currentDirectory.getAbsolutePath();
         currentPath = currentPath.replace('\\', '/');
         if (cores > 1 && ((logUtils.getFileList().length - 2) > (cores * 2))) {
-            logger.info("Starting Clustering Algorithm with multiple cores");
             System.out.println("Clustering Algorithm start");
             runProcessMultiCores(logUtils, cores, scriptPath, currentPath);
             System.out.println("\nClustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
@@ -311,10 +291,8 @@ public class ViewController implements Initializable {
             File winner = selectWinnerFile(outputList);
             File[] winners = deleteLosersFiles(outputList, winner);
             moveFilesToOutputDirectory(winners[0], winners[1]);
-            logger.info("Ended Clustering Algorithm");
             System.out.println("Done");
         } else {
-            logger.info("Starting Clustering Algorithm with single core");
             System.out.println("Clustering Algorithm start");
             runProcessSingleCore(logUtils, scriptPath, currentPath);
             System.out.println("Clustering Algorithm terminated - total execution time: " + (System.currentTimeMillis() - startingTime));
@@ -324,7 +302,6 @@ public class ViewController implements Initializable {
             if (outputList.size() == 2) {
                 moveFilesToOutputDirectory(outputList.get(0), outputList.get(1));
             }
-            logger.info("Ended Clustering Algorithm");
             System.out.println("Done");
         }
         logUtils.generateNodeListReport("CUSTOM");
@@ -353,7 +330,6 @@ public class ViewController implements Initializable {
             // Il gamma e gli n gram a prescindere sono dati in input
             processMiningRunProperties.setGamma(gamma);
         }
-        logger.info("Setting the following properties for mining {}", processMiningRunProperties);
         logUtils.setProcessMiningRunProperties(processMiningRunProperties);
     }
 
@@ -518,7 +494,6 @@ public class ViewController implements Initializable {
     }
 
     public void closeApplication() throws IOException {
-        logger.info("Closing Application");
         if (isOutputDirEmpty()) {
             Platform.exit();
         } else {

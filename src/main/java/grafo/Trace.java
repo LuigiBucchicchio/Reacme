@@ -1,5 +1,6 @@
 package grafo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ public class Trace implements Comparable<Trace> {
     private String logId;
 
     public List<String> getActivitySequence() {
-        return activitySequence;
+        return this.activitySequence;
     }
 
     public void setActivitySequence(List<String> activitySet) {

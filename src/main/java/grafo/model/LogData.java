@@ -14,16 +14,38 @@ import java.util.Map;
 public class LogData {
     private String logName;
     private final List<Trace> traces;
-    private final Map<List<String>, Integer> dictionary;
+    private final Map<List<String>, Integer> dictionaryOfGrams;
+
+    private final Map<String, Integer> dictionaryOfActivities;
 
     public LogData(String logName, List<Trace> traces) {
         this.logName = logName;
         this.traces = traces;
-        dictionary = new HashMap<>();
+        this.dictionaryOfGrams = new HashMap<>();
+        this.dictionaryOfActivities = new HashMap<>();
     }
 
     public Map<List<String>, Integer> getDictionary() {
-        return dictionary;
+        return dictionaryOfGrams;
+    }
+
+    public void generateDictionaryOfGramsByValue(int grams) {
+        List<List<String>> nGramsList = getGramsByValue(grams);
+        nGramsList.forEach(this::addToDictionary);
+    }
+
+    public void generateDictionaryOfActivities() {
+        for (Trace trace : traces)
+            trace.getActivitySequence().forEach(this::addToActivityDictionary);
+
+    }
+
+    private void addToActivityDictionary(String activity) {
+        if (dictionaryOfActivities.containsKey(activity)) {
+            dictionaryOfActivities.put(activity, dictionaryOfActivities.get(activity) + 1);
+        } else {
+            dictionaryOfActivities.put(activity, 1);
+        }
     }
 
     private List<List<String>> getGramsByValue(int gramsValue) {
@@ -39,24 +61,37 @@ public class LogData {
 
     private List<String> generateSubSequence(int grams, List<String> activityList, int i) {
         List<String> subsequence = new LinkedList<>();
-        for (int j = 0; j < grams; j++) {
-            subsequence.add(activityList.get(j + i));
+        for (int subsequenceStartPosition = 0; subsequenceStartPosition < grams; subsequenceStartPosition++) {
+            subsequence.add(activityList.get(subsequenceStartPosition + i));
         }
         return subsequence;
     }
 
-    public void generateDictionaryByValue(int grams) {
-        List<List<String>> nGramsList = getGramsByValue(grams);
-        nGramsList.forEach(this::addToDictionary);
-    }
-
     private void addToDictionary(List<String> subsequence) {
-        if (dictionary.containsKey(subsequence)) {
-            dictionary.put(subsequence, dictionary.get(subsequence) + 1);
+        if (dictionaryOfGrams.containsKey(subsequence)) {
+            dictionaryOfGrams.put(subsequence, dictionaryOfGrams.get(subsequence) + 1);
         } else {
-            dictionary.put(subsequence, 1);
+            dictionaryOfGrams.put(subsequence, 1);
         }
     }
 
+    @Override
+    public String toString() {
+        StringBuilder toReturn = new StringBuilder();
+        dictionaryOfGrams.forEach((key, value) -> toReturn.append(key).append(" : ").append(value).append("\n"));
+        return toReturn.toString();
+    }
 
+    public void printMapOfGrams() {
+        dictionaryOfGrams.forEach((key, value) -> System.out.println(key + " :" + value));
+    }
+
+    public void printMapOfActivities() {
+        dictionaryOfActivities.forEach((key, value) -> System.out.println(key + " :" + value));
+    }
+
+
+    public String getName() {
+        return this.logName;
+    }
 }

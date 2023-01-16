@@ -5,8 +5,6 @@ module grafo.view {
     requires com.opencsv;
     requires OpenXES;
     requires gs.core;
-    requires org.apache.logging.log4j.core;
-    requires org.apache.logging.log4j;
 
     opens grafo.view to javafx.fxml;
     exports grafo.view;

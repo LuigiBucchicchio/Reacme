@@ -154,7 +154,7 @@ public class LogUtilsRepeatingGraph {
     }
 
     public void applyGramsToLogs(int grams) {
-        analyzedLogs.forEach(logData -> logData.generateDictionaryByValue(processMiningRunProperties.getGrams()));
+        analyzedLogs.forEach(logData -> logData.generateDictionaryOfGramsByValue(processMiningRunProperties.getGrams()));
     }
 
     public ProcessMiningRunProperties getProcessMiningRunProperties() {

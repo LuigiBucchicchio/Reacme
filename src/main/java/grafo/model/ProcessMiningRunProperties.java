@@ -16,8 +16,8 @@ import static grafo.model.DefaultProperties.*;
  *     <li><code>grams</code> - di default, il valore sta a <code>3</code></li>
  * </ul>
  *
- * @see DefaultProperties
  * @author Bogdan Donici
+ * @see DefaultProperties
  */
 public class ProcessMiningRunProperties {
 
@@ -38,6 +38,7 @@ public class ProcessMiningRunProperties {
         this.nodeSemiEqualScore = DEFAULT_NODE_SEMI_EQUAL_SCORE.getValue();
         this.nodeNotEqualScore = DEFAULT_NODE_NOT_EQUAL_SCORE.getValue();
         this.gamma = DEFAULT_GAMMA.getValue();
+        this.grams = 3;
     }
 
     public ProcessMiningRunProperties(double edgeEqualScore, double edgeSemiEqualScore,

@@ -22,10 +22,15 @@ public class GraphLogAnalyzer {
     private List<Trace> traceSet = new ArrayList<Trace>();
     private Graph graph;
     boolean firstTime = true;
+    // TODO --> L'insieme di tutti i nodi del file log
     private Set<String> nodeIdSuperSet = new TreeSet<>();
+    // TODO --> L'insieme di tutti gli archi del file log
+
     private Set<String> edgeIdSuperSet = new TreeSet<>();
 
+    // TODO --> L'insieme di tutti i nodi di una traccia
     private Set<String> nodeIdSet;
+    // TODO --> L'insieme di tutti gli archi di una traccia
     private Set<String> edgeIdSet;
 
     private String lastNodeId = null;
@@ -99,7 +104,6 @@ public class GraphLogAnalyzer {
         this.finishTime = System.currentTimeMillis() - this.startingTime;
 
     }
-
 
 
     private void traceListAnalyze(String traceId, List<String> trace) {
@@ -217,6 +221,7 @@ public class GraphLogAnalyzer {
         List<TraceRepeatingEdgeInfo> edgeSetInfo = new ArrayList<TraceRepeatingEdgeInfo>();
 
         edgeSetInfo.add(new TraceRepeatingEdgeInfo(traceId, 0));
+
         e.setAttribute("info", edgeSetInfo);
 
         edgeIdSuperSet.add(edgeLabel);
@@ -283,7 +288,6 @@ public class GraphLogAnalyzer {
         pic.setLayoutPolicy(LayoutPolicy.COMPUTED_FULLY_AT_NEW_IMAGE);
 
         try {
-
             pic.writeAll(graph, graphName + ".png");
         } catch (IOException e) {
             e.printStackTrace();
