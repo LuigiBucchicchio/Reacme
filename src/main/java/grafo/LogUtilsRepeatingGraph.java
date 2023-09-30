@@ -28,6 +28,7 @@ import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 
@@ -689,6 +690,7 @@ public void startMenu(Scanner tastiera) {
 //	
 		
 		log.generateNodeListReport("CUSTOM");
+		log.generateEdgeListReport("CUSTOM");
 
 	}
 	
@@ -998,6 +1000,55 @@ public void startMenu(Scanner tastiera) {
 			File f = new File("output");
 			f.mkdir();
 			File csvFile = new File(f.getAbsolutePath()+"\\"+"select_all_from_attivita.csv");
+			//scriba, pls
+			CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
+
+			for (String[] array : rows) {
+				
+				writer.writeNext(array);
+			}
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
+		
+	}
+	
+	public void generateEdgeListReport(String etichettaDataset) {
+		
+		List<String[]> rows = new ArrayList<String[]>();
+		
+		List<Graph> graphsList = getGraphList();
+		Iterator<Graph> graphIterator = graphsList.iterator();
+		int index = 0;
+		while(graphIterator.hasNext()) {
+			Graph g = graphIterator.next();
+			Iterator<Edge> edgeList = g.edges().iterator();
+			while(edgeList.hasNext()) {
+				Edge e = edgeList.next();
+				String id = e.getId();
+				Object repeating = e.getAttribute("ui.label");
+				String logName = getFileList()[index].getName();
+				String[] row = new String[6];
+				row[0] = id;
+				row[1] = logName;
+				row[2] = etichettaDataset;
+				row[3] = "null";
+				if(repeating != null)
+					row[4] = String.valueOf(1);
+				else
+					row[4] = String.valueOf(0);
+				row[5] = "null";
+				rows.add(row);
+			}
+			index++;
+		}
+		
+		try {
+			//cartellina
+			File f = new File("output");
+			f.mkdir();
+			File csvFile = new File(f.getAbsolutePath()+"\\"+"select_all_from_transizioni.csv");
 			//scriba, pls
 			CSVWriter writer = new CSVWriter(new FileWriter(csvFile));
 

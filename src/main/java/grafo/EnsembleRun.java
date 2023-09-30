@@ -279,6 +279,7 @@ public class EnsembleRun {
 			System.out.println("Done");
 		}
 			log.generateNodeListReport("CUSTOM");
+			log.generateEdgeListReport("CUSTOM");
 			prepareForHeatMap();
 	}
 	
